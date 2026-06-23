@@ -69,6 +69,7 @@ export function analyzePhishingRisk(input: AnalyzePhishingRiskInput): string {
     signals: score.signals,
     situation,
     channels: REPORT_CHANNELS[situation],
+    channel: input.context?.channel,
   });
 }
 

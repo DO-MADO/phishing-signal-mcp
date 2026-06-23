@@ -22,7 +22,7 @@ export const DISCLAIMER =
 
 // SPEC §7: 사용자가 OTP·비밀번호 등을 입력하지 않도록 안내.
 export const SENSITIVE_INPUT_WARNING =
-  'OTP·비밀번호·주민번호·계좌번호 등 민감정보는 이 대화에 입력하지 마세요.';
+  'OTP·비밀번호·주민번호·여권번호·계좌번호 등 민감정보는 이 대화에 입력하지 마세요.';
 
 /** UTF-8 바이트 길이. */
 export function byteLength(text: string): number {
@@ -104,12 +104,22 @@ const DO_NOW: Record<Situation, string[]> = {
   ],
 };
 
+export type AnalysisChannel = 'phone' | 'sms' | 'kakao' | 'unknown';
+
+const CHANNEL_DO_NOW: Record<AnalysisChannel, string[]> = {
+  phone: ['통화 중이라면 바로 끊고, 상대가 알려준 번호가 아니라 공식 대표번호로 직접 다시 확인하세요.'],
+  sms: ['문자 링크·첨부를 열지 말고, 문자 내용을 캡처한 뒤 발신번호와 함께 신고/상담에 활용하세요.'],
+  kakao: ['메신저 대화방의 링크·파일을 열지 말고, 기존 연락처나 다른 채널로 본인 여부를 직접 확인하세요.'],
+  unknown: [],
+};
+
 export interface RiskAnalysisView {
   readonly level: RiskLevel;
   readonly total: number;
   readonly signals: readonly DetectedSignal[];
   readonly situation: Situation;
   readonly channels: readonly ReportChannel[];
+  readonly channel?: AnalysisChannel;
 }
 
 /** analyzePhishingRisk 결과를 정제된 마크다운으로 포맷(24k 가드 포함). */
@@ -138,6 +148,9 @@ export function formatRiskAnalysis(view: RiskAnalysisView): string {
   // 지금 해야 할 행동
   lines.push('\n### 지금 해야 할 행동');
   for (const item of DO_NOW[view.situation]) lines.push(`- ${item}`);
+  if (view.channel) {
+    for (const item of CHANNEL_DO_NOW[view.channel]) lines.push(`- ${item}`);
+  }
 
   // 공식 신고 루트 요약
   lines.push('\n### 공식 신고 루트');

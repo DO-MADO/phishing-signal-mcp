@@ -9,6 +9,26 @@ test('주민등록번호를 마스킹하고 요청 키워드는 보존한다', (
   assert.ok(out.includes('주민번호'), '요청 키워드(주민번호)는 보존되어야 함');
 });
 
+test('외국인등록번호를 마스킹한다', () => {
+  const out = maskSensitive('외국인등록번호 900101-5123456 확인');
+  assert.ok(!out.includes('900101-5123456'), '원본 외국인등록번호 노출 금지');
+  assert.match(out, /\*{6}-\*{7}/);
+});
+
+test('운전면허번호를 마스킹한다', () => {
+  const out = maskSensitive('운전면허번호 12-34-567890-12 제출');
+  assert.ok(!out.includes('12-34-567890-12'), '원본 운전면허번호 노출 금지');
+  assert.match(out, /\*{2}-\*{2}-\*{6}-\*{2}/);
+});
+
+test('여권번호를 마스킹한다', () => {
+  const out = maskSensitive('여권번호 M12345678 또는 AB1234567 확인');
+  assert.ok(!out.includes('M12345678'), '원본 여권번호 노출 금지');
+  assert.ok(!out.includes('AB1234567'), '원본 여권번호 노출 금지');
+  assert.match(out, /M\*{8}/);
+  assert.match(out, /AB\*{7}/);
+});
+
 test('휴대전화 번호를 마스킹한다', () => {
   const out = maskSensitive('연락처 010-1234-5678 로 연락주세요');
   assert.ok(!/010-1234-5678/.test(out));
