@@ -90,8 +90,8 @@ const DONT_DO: Record<Situation, string[]> = {
 
 const DO_NOW: Record<Situation, string[]> = {
   suspiciousOnly: [
-    '통화를 끊고, 해당 기관/지인에게 공식 대표번호로 직접 확인하세요.',
-    '의심 문자·번호는 캡처해 두고 아래 채널로 신고/상담하세요.',
+    '상대가 주장한 기관/지인에게 공식 대표번호 또는 기존 연락처로 직접 확인하세요.',
+    '의심 내용은 삭제하지 말고 캡처해 아래 채널로 신고/상담하세요.',
   ],
   alreadyPaid: [ALREADY_PAID_URGENCY],
   personalInfoExposed: [
@@ -108,7 +108,7 @@ export type AnalysisChannel = 'phone' | 'sms' | 'kakao' | 'unknown';
 
 const CHANNEL_DO_NOW: Record<AnalysisChannel, string[]> = {
   phone: ['통화 중이라면 바로 끊고, 상대가 알려준 번호가 아니라 공식 대표번호로 직접 다시 확인하세요.'],
-  sms: ['문자 링크·첨부를 열지 말고, 문자 내용을 캡처한 뒤 발신번호와 함께 신고/상담에 활용하세요.'],
+  sms: ['문자 링크·첨부를 열지 말고, 발신번호와 수신 시간을 함께 보존하세요.'],
   kakao: ['메신저 대화방의 링크·파일을 열지 말고, 기존 연락처나 다른 채널로 본인 여부를 직접 확인하세요.'],
   unknown: [],
 };

@@ -54,6 +54,8 @@ test('수신 채널에 따라 행동 가이드를 정밀화한다', () => {
   assert.match(phone, /통화 중이라면 바로 끊고/);
   assert.match(sms, /문자 링크·첨부를 열지 말고/);
   assert.match(kakao, /메신저 대화방의 링크·파일을 열지 말고/);
+  assert.doesNotMatch(sms, /통화 중이라면 바로 끊고/);
+  assert.doesNotMatch(kakao, /통화 중이라면 바로 끊고/);
   assert.notEqual(phone, sms);
   assert.notEqual(sms, kakao);
 });
