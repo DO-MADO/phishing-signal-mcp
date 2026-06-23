@@ -70,7 +70,7 @@ export function renderChannels(channels: readonly ReportChannel[]): string {
 const DONT_DO: Record<Situation, string[]> = {
   suspiciousOnly: [
     '인증번호(OTP)·비밀번호·계좌번호를 알려주지 마세요.',
-    '문자·메신저의 링크를 누르거나 첨부 파일을 열지 마세요.',
+    '상대가 보낸 링크를 누르거나 첨부 파일을 열지 마세요.',
     '상대가 안내하는 앱(원격제어·보안앱 등)을 설치하지 마세요.',
     '재촉에 떠밀려 송금/이체하지 마세요.',
   ],
