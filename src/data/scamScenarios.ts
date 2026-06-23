@@ -45,6 +45,10 @@ export interface ScamScenario {
   readonly patterns: Partial<Record<SignalId, readonly RegExp[]>>;
 }
 
+const CASUAL_REQUEST_ENDING = String.raw`(?:줘[요용욤여잉ㅇ~!?.ㅠㅜ]*|줭|죵|주라|줄래)`;
+const MONEY_REQUEST_ACTION = String.raw`(?:보내\s*${CASUAL_REQUEST_ENDING}|빌려\s*${CASUAL_REQUEST_ENDING}|사\s*${CASUAL_REQUEST_ENDING}|입금|송금|이체|필요)`;
+const MONEY_TRANSFER_ACTION = String.raw`(?:보내\s*${CASUAL_REQUEST_ENDING}|빌려\s*${CASUAL_REQUEST_ENDING}|사\s*${CASUAL_REQUEST_ENDING}|입금|송금|이체)`;
+
 export interface CounterscamScenarioReference {
   readonly sourceUrl: string;
   readonly sourceTitle: '피싱안심SOS 피싱 시나리오';
@@ -124,10 +128,13 @@ export const SCAM_SCENARIOS: readonly ScamScenario[] = [
       impersonation: [
         /(엄마|아빠|어머니|아버지|아들|딸|자녀|오빠|누나|형|언니|친구|지인).{0,30}(나야|나다|폰\s*고장|휴대폰\s*고장|핸드폰\s*고장|번호\s*(?:바뀜|변경)|카톡\s*안\s*됨)/g,
       ],
-      urgency: [/(급해|급하게|지금|바로|빨리|당장).{0,30}(도와줘|처리|보내줘|입금|송금|이체)/g],
+      urgency: [
+        new RegExp(String.raw`(급해|급하게|급함|급한데|급행|지금|바로|빨리|당장).{0,30}(도와\s*${CASUAL_REQUEST_ENDING}|처리|${MONEY_TRANSFER_ACTION})`, 'g'),
+      ],
       financialLoss: [
-        /(돈|비용|수리비|병원비|합의금|상품권|기프트\s*카드|핀번호|PIN).{0,30}(보내줘|빌려줘|입금|송금|이체|사줘|필요)/gi,
-        /(보내줘|빌려줘|입금|송금|이체|사줘).{0,30}(돈|비용|수리비|병원비|합의금|상품권|기프트\s*카드|핀번호|PIN)/gi,
+        new RegExp(String.raw`(돈|비용|수리비|병원비|합의금|상품권|기프트\s*카드|핀번호|PIN).{0,30}${MONEY_REQUEST_ACTION}`, 'gi'),
+        new RegExp(String.raw`${MONEY_TRANSFER_ACTION}.{0,30}(돈|비용|수리비|병원비|합의금|상품권|기프트\s*카드|핀번호|PIN)`, 'gi'),
+        /(엄마|아빠|어머니|아버지|아들|딸|자녀|오빠|누나|형|언니|친구|지인).{0,20}(나|나야|나다).{0,20}(돈|비용|수리비|병원비|합의금)\s*좀[ㅠㅜ~!?.\s]*$/g,
       ],
     },
   },
@@ -154,10 +161,10 @@ export const SCAM_SCENARIOS: readonly ScamScenario[] = [
     reason: '상품권 구매 후 PIN·사진 전달을 요구하는 고위험 결제 유도 패턴입니다.',
     patterns: {
       requestedAction: [
-        /(상품권|문화\s*상품권|기프트\s*카드|구글\s*기프트|핀번호|PIN|pin|편의점).{0,35}(번호|코드|사진|캡처|찍어서|보내줘|전송)/gi,
+        new RegExp(String.raw`(상품권|문화\s*상품권|기프트\s*카드|구글\s*기프트|핀번호|PIN|pin|편의점).{0,35}(번호|코드|사진|캡처|찍어서|${MONEY_TRANSFER_ACTION}|전송)`, 'gi'),
       ],
       financialLoss: [
-        /(편의점|상품권|문화\s*상품권|기프트\s*카드|구글\s*기프트).{0,35}(사서|구매|결제|충전|보내줘|전송)/g,
+        new RegExp(String.raw`(편의점|상품권|문화\s*상품권|기프트\s*카드|구글\s*기프트).{0,35}(사서|구매|결제|충전|${MONEY_TRANSFER_ACTION}|전송)`, 'g'),
       ],
     },
   },

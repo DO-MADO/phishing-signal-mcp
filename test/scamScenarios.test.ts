@@ -60,10 +60,31 @@ test('가족 사칭 후 급전 요구는 높음 이상으로 판단한다', () =
   assert.match(md, /돈|금전|송금|보내줘/);
 });
 
+test('구어체·변형 어미의 가족 사칭 금전 요구도 높음 이상으로 판단한다', () => {
+  assertAtLeast(levelOf('엄마 ㅠㅠ 나 민정이ㅠㅠ 돈 없어 돈 너무 급행 돈 보내줭'), '높음');
+  assertAtLeast(levelOf('엄마 나 폰 고장났어 돈 좀 보내죵'), '높음');
+  assertAtLeast(levelOf('아빠 급한데 수리비 보내줘용'), '높음');
+  assertAtLeast(levelOf('엄마 나 폰 고장났어 돈 좀 보내주라'), '높음');
+  assertAtLeast(levelOf('아빠 급한데 수리비 입금좀'), '높음');
+  assertAtLeast(levelOf('엄마ㅠㅠ나야돈좀보내줘'), '높음');
+  assertAtLeast(levelOf('ㅇㅁ 나 돈좀 보내줘'), '높음');
+  assertAtLeast(levelOf('엄마 나 돈좀'), '높음');
+  assertAtLeast(levelOf('아빠 나 수리비 좀 ㅠㅠ'), '높음');
+});
+
+test('구어체 금전 표현은 정상 입금·생활비 문맥까지 과탐하지 않는다', () => {
+  assert.equal(levelOf('입금 확인했습니다 감사합니다'), '낮음');
+  assert.equal(levelOf('친구야 내가 돈 보내줄게'), '낮음');
+  assert.equal(levelOf('이번 달 생활비 돈 좀 아껴야겠다'), '낮음');
+  assert.equal(levelOf('엄마 나 돈 좀 아껴야겠다'), '낮음');
+  assert.equal(levelOf('아빠 나 오늘 급행열차 타고 가'), '낮음');
+});
+
 test('상품권 PIN 요구는 매우 높음으로 판단한다', () => {
   const text = '편의점에서 상품권 사서 PIN 보내줘.';
 
   assert.equal(levelOf(text), '매우 높음');
+  assert.equal(levelOf('편의점에서 상품권 사서 PIN 보내줭'), '매우 높음');
 });
 
 test('자녀 사고·납치·합의금 협박은 매우 높음으로 판단한다', () => {
