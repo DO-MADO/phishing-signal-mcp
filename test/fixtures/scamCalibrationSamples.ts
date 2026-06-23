@@ -271,8 +271,8 @@ export const SCAM_CALIBRATION_SAMPLES: readonly ScamCalibrationSample[] = [
   {
     id: 'grant-01',
     text: '정부지원금 신청 대상 확인 링크 안내',
-    expectedLevel: '주의',
-    expectedSignals: ['impersonation'],
+    expectedLevel: '높음',
+    expectedSignals: ['impersonation', 'suspiciousLink'],
     scenarioId: 'government_grant_or_refund_smishing',
     sourceIds: ['kisa-boho', 'fss-voice-phishing'],
   },
