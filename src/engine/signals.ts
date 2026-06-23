@@ -32,7 +32,7 @@ export const SIGNAL_DEFINITIONS: readonly SignalDefinition[] = [
     label: '기관·가족/지인 사칭',
     description: '공공기관·금융기관 또는 가족/지인 사칭 표현',
     patterns: [
-      /(검찰청|대검찰청|지방검찰청|서울중앙지검|검찰|수사관|경찰청|경찰서|사이버수사|경찰|금융감독원|금감원|국세청|세무서|건강보험공단|국민연금공단|국민연금|우체국|관세청|법원|등기소|정부24)/g,
+      /(검찰청|대검찰청|지방검찰청|서울중앙지검|검찰|검\s*사|수사관|수\s*사\s*관|경찰청|경찰서|사이버수사|경찰|금융감독원|금감원|금\s*감\s*원|국세청|세무서|건강보험공단|국민연금공단|국민연금|우체국|관세청|법원|등기소|정부24)/g,
       ...getScenarioPatterns('impersonation'),
     ],
   },
@@ -41,7 +41,8 @@ export const SIGNAL_DEFINITIONS: readonly SignalDefinition[] = [
     label: '위험 행동 요구',
     description: '인증번호(OTP) 공유 또는 원격제어 앱 설치 유도',
     patterns: [
-      /(인증번호|승인번호|OTP|보안카드(?:\s*번호)?|원격제어|원격\s*(?:접속|지원|조종)|원격|애니데스크|anydesk|팀뷰어|teamviewer|화면\s*공유|미러링)/gi,
+      /(인증\s*번호|인\s*증\s*번\s*호|승인\s*번호|승\s*인\s*번\s*호|OTP|오\s*티\s*피|ㅇ\s*ㅈ\s*ㅂ\s*ㅎ|보안\s*카드(?:\s*번호)?).{0,25}(불러|알려|말해|입력|전송|제출|공유|보내|캡처|찍어)/gi,
+      /(원격제어|원격\s*(?:접속|지원|조종)|원격지원|애니데스크|anydesk|팀뷰어|teamviewer|화면\s*공유|미러링).{0,25}(설치|깔|실행|연결|접속|허용|코드|켜|공유)/gi,
       ...getScenarioPatterns('requestedAction'),
     ],
   },
@@ -59,9 +60,9 @@ export const SIGNAL_DEFINITIONS: readonly SignalDefinition[] = [
     label: '금전 피해 가능성',
     description: '송금·안전계좌·대납·보증금 등 금전 요구',
     patterns: [
-      /(안전\s*계좌|대납|보증금|선입금|무통장|공탁금|벌금|예치금|합의금|상품권|기프트\s*카드|핀번호|PIN)/gi,
+      /(안전\s*계좌|대납|보증금|선입금|무통장|공탁금|벌금|예치금)/gi,
+      /(핀\s*번호|PIN).{0,20}(보내|알려|전송|사진|캡처|찍어서)/gi,
       /(?:송금|입금|이체|납부)\s*(?:좀|해\s*(?:줘[요용욤여잉ㅇ~!?.ㅠㅜ]*|주라|줄래|주세요|주시|라|야)?|하세요|하라|해야|부탁|요청|바랍니다|필요|진행|처리)/gi,
-      /계좌\s*이체/gi,
       ...getScenarioPatterns('financialLoss'),
     ],
   },
@@ -70,7 +71,8 @@ export const SIGNAL_DEFINITIONS: readonly SignalDefinition[] = [
     label: '개인정보 탈취',
     description: '주민번호·계좌·비밀번호·신분증 등 민감정보 요구',
     patterns: [
-      /(주민\s*등록\s*번호|주민\s*번호|계좌\s*번호|비밀\s*번호|비번|카드\s*번호|보안\s*카드\s*번호|신분증\s*사진|신분증|통장\s*사본|cvc|cvv)/gi,
+      /(주민\s*등록\s*번호|주민\s*번호|계좌\s*번호|비밀\s*번호|비번|카드\s*번호|보안\s*카드\s*번호|신분증\s*사진|신분증|통장\s*사본|cvc|cvv).{0,25}(불러|알려|말해|입력|전송|제출|공유|보내|촬영|찍어|확인)/gi,
+      /(불러|알려|말해|입력|전송|제출|공유|보내|촬영|찍어|확인).{0,25}(주민\s*등록\s*번호|주민\s*번호|계좌\s*번호|비밀\s*번호|비번|카드\s*번호|보안\s*카드\s*번호|신분증\s*사진|신분증|통장\s*사본|cvc|cvv)/gi,
       ...getScenarioPatterns('personalInfo'),
     ],
   },
@@ -79,7 +81,7 @@ export const SIGNAL_DEFINITIONS: readonly SignalDefinition[] = [
     label: '악성앱 설치 유도',
     description: 'apk 등 출처불명 앱 설치 유도',
     patterns: [
-      /(\.apk|apk\s*파일|apk|어플\s*설치|앱\s*설치|어플리케이션\s*설치|출처를?\s*알\s*수\s*없는|알\s*수\s*없는\s*출처|설치\s*파일|보안\s*앱\s*설치|인증\s*앱\s*설치)/gi,
+      /(\.apk|apk\s*파일|apk|어플\s*설치|앱\s*설치|어플리케이션\s*설치|어플\s*깔|앱\s*깔|출처를?\s*알\s*수\s*없는|알\s*수\s*없는\s*출처|설치\s*파일|보안\s*(?:앱|어플|프로그램)\s*(?:설치|깔|실행)|인증\s*(?:앱|어플)\s*설치|접근성\s*허용)/gi,
       ...getScenarioPatterns('malwareApp'),
     ],
   },
@@ -96,10 +98,39 @@ export const SIGNAL_DEFINITIONS: readonly SignalDefinition[] = [
   },
 ];
 
+const BENIGN_CONTEXT_PATTERNS: Partial<Record<SignalId, readonly RegExp[]>> = {
+  impersonation: [
+    /(검찰|경찰서?|법원|등기|은행|대출|건강보험|주민센터|세무서|환급).{0,30}(뉴스|기사|위치|검색|제도|설명|자료|읽|비교|전입신고|직접\s*(?:냈|방문)|문의)/,
+    /(뉴스|기사|위치|검색|제도|설명|자료|읽|비교|전입신고|직접\s*(?:냈|방문)|문의).{0,30}(검찰|경찰서?|법원|등기|은행|대출|건강보험|주민센터|세무서|환급)/,
+    /(자녀|아이|아들|딸|학생|가족|사고).{0,30}(예방|교육|자료|읽|사례|법교육)/,
+    /(예방|교육|자료|읽|사례|법교육).{0,30}(자녀|아이|아들|딸|학생|가족|사고)/,
+  ],
+  requestedAction: [
+    /(OTP|오\s*티\s*피|인증\s*번호|인\s*증\s*번\s*호|승인\s*번호|보안\s*카드|원격\s*지원|원격지원|보안\s*(?:앱|어플|프로그램)|앱\s*설치|어플\s*설치).{0,35}(절대|안\s*된|하지\s*마|알려주지|타인에게|요구하면|피싱일 수|배웠|교육|내부\s*게시판|사내|IT팀|예약|로그인|재발급|하는\s*법|방법)/i,
+    /(절대|안\s*된|하지\s*마|알려주지|타인에게|요구하면|피싱일 수|배웠|교육|내부\s*게시판|사내|IT팀|예약|로그인|재발급|하는\s*법|방법).{0,35}(OTP|오\s*티\s*피|인증\s*번호|인\s*증\s*번\s*호|승인\s*번호|보안\s*카드|원격\s*지원|원격지원|보안\s*(?:앱|어플|프로그램)|앱\s*설치|어플\s*설치)/i,
+  ],
+  personalInfo: [
+    /(계좌\s*이체).{0,35}(한도|늘리는\s*법|수수료|무료|편하다)/i,
+    /(한도|늘리는\s*법|수수료|무료|편하다).{0,35}(계좌\s*이체)/i,
+    /(주민\s*번호|계좌\s*번호|비밀\s*번호|비밀번호|보안\s*카드|신분증|통장\s*사본|cvc|cvv).{0,35}(절대|안\s*된|하지\s*마|알려주지|타인에게|요구하면|피싱일 수|배웠|교육|까먹|챙겨|어디|늘리는\s*법|재발급|로그인)/i,
+    /(절대|안\s*된|하지\s*마|알려주지|타인에게|요구하면|피싱일 수|배웠|교육|까먹|챙겨|어디|늘리는\s*법|재발급|로그인).{0,35}(주민\s*번호|계좌\s*번호|비밀\s*번호|비밀번호|보안\s*카드|신분증|통장\s*사본|cvc|cvv)/i,
+  ],
+  malwareApp: [
+    /(회사|사내|내부\s*게시판|IT팀|예약|하는\s*법|방법).{0,35}(보안\s*(?:앱|어플|프로그램)|원격\s*지원|원격지원|앱\s*설치|어플\s*설치|설치\s*방법)/i,
+    /(보안\s*(?:앱|어플|프로그램)|원격\s*지원|원격지원|앱\s*설치|어플\s*설치|설치\s*방법).{0,35}(회사|사내|내부\s*게시판|IT팀|예약|하는\s*법|방법)/i,
+  ],
+};
+
+function shouldSuppressSignal(signalId: SignalId, text: string): boolean {
+  return (BENIGN_CONTEXT_PATTERNS[signalId] ?? []).some((pattern) => pattern.test(text));
+}
+
 /** 텍스트에서 발화된(매칭된) 위험 신호 목록을 반환한다. */
 export function detectSignals(text: string): DetectedSignal[] {
   const detected: DetectedSignal[] = [];
   for (const def of SIGNAL_DEFINITIONS) {
+    if (shouldSuppressSignal(def.id, text)) continue;
+
     const found = new Set<string>();
     for (const pattern of def.patterns) {
       const matches = text.match(pattern); // g 플래그 → 전체 매칭 배열 또는 null

@@ -45,9 +45,9 @@ export interface ScamScenario {
   readonly patterns: Partial<Record<SignalId, readonly RegExp[]>>;
 }
 
-const CASUAL_REQUEST_ENDING = String.raw`(?:줘[요용욤여잉ㅇ~!?.ㅠㅜ]*|줭|죵|주라|줄래)`;
-const MONEY_REQUEST_ACTION = String.raw`(?:보내\s*${CASUAL_REQUEST_ENDING}|빌려\s*${CASUAL_REQUEST_ENDING}|사\s*${CASUAL_REQUEST_ENDING}|입금|송금|이체|필요)`;
-const MONEY_TRANSFER_ACTION = String.raw`(?:보내\s*${CASUAL_REQUEST_ENDING}|빌려\s*${CASUAL_REQUEST_ENDING}|사\s*${CASUAL_REQUEST_ENDING}|입금|송금|이체)`;
+const CASUAL_REQUEST_ENDING = String.raw`(?:줘[요용욤여잉ㅇ~!?.ㅠㅜ]*|줭|죵|주라|줄래|라|세요|주세요)`;
+const MONEY_REQUEST_ACTION = String.raw`(?:보내\s*${CASUAL_REQUEST_ENDING}|보내\s*줄\s*수|부쳐\s*${CASUAL_REQUEST_ENDING}|쏴\s*${CASUAL_REQUEST_ENDING}|넣어\s*${CASUAL_REQUEST_ENDING}|빌려\s*${CASUAL_REQUEST_ENDING}|사\s*${CASUAL_REQUEST_ENDING}|입금|송금|이체|필요|부탁|가능)`;
+const MONEY_TRANSFER_ACTION = String.raw`(?:보내\s*${CASUAL_REQUEST_ENDING}|보내\s*줄\s*수|부쳐\s*${CASUAL_REQUEST_ENDING}|쏴\s*${CASUAL_REQUEST_ENDING}|넣어\s*${CASUAL_REQUEST_ENDING}|빌려\s*${CASUAL_REQUEST_ENDING}|사\s*${CASUAL_REQUEST_ENDING}|입금|송금|이체)`;
 
 export interface CounterscamScenarioReference {
   readonly sourceUrl: string;
@@ -126,15 +126,16 @@ export const SCAM_SCENARIOS: readonly ScamScenario[] = [
     reason: '가족 또는 지인을 사칭하면서 급한 사정을 이유로 송금·입금을 요구하는 패턴입니다.',
     patterns: {
       impersonation: [
-        /(엄마|아빠|어머니|아버지|아들|딸|자녀|오빠|누나|형|언니|친구|지인).{0,30}(나야|나다|폰\s*고장|휴대폰\s*고장|핸드폰\s*고장|번호\s*(?:바뀜|변경)|카톡\s*안\s*됨)/g,
+        /(엄마|아빠|어머니|아버지|아들|딸|자녀|오빠|누나|형|언니|친구|지인).{0,30}(나야|나다|폰\s*(?:고장|깨짐|깨졌|잃어버림)|휴대폰\s*(?:고장|깨짐|깨졌|안\s*돼|잃어버림)|핸드폰\s*(?:고장|깨짐|깨졌|안\s*돼|잃어버림)|번호\s*(?:바뀜|바뀌었|바꿨|변경)|카톡\s*안\s*됨)/g,
       ],
       urgency: [
-        new RegExp(String.raw`(급해|급하게|급함|급한데|급행|지금|바로|빨리|당장).{0,30}(도와\s*${CASUAL_REQUEST_ENDING}|처리|${MONEY_TRANSFER_ACTION})`, 'g'),
+        new RegExp(String.raw`(급해|급하게|급함|급한데|급한\s*일|급행|지금|바로|빨리|당장|큰일).{0,30}(도와\s*${CASUAL_REQUEST_ENDING}|처리|${MONEY_TRANSFER_ACTION}|돈\s*가능)`, 'g'),
       ],
       financialLoss: [
-        new RegExp(String.raw`(돈|비용|수리비|병원비|합의금|상품권|기프트\s*카드|핀번호|PIN).{0,30}${MONEY_REQUEST_ACTION}`, 'gi'),
-        new RegExp(String.raw`${MONEY_TRANSFER_ACTION}.{0,30}(돈|비용|수리비|병원비|합의금|상품권|기프트\s*카드|핀번호|PIN)`, 'gi'),
-        /(엄마|아빠|어머니|아버지|아들|딸|자녀|오빠|누나|형|언니|친구|지인).{0,20}(나|나야|나다).{0,20}(돈|비용|수리비|병원비|합의금)\s*좀[ㅠㅜ~!?.\s]*$/g,
+        new RegExp(String.raw`(돈|비용|수리비|병원비|생활비|합의금|상품권|기프트\s*카드|핀번호|PIN|[0-9]+\s*만원|[일이삼사오육칠팔구십백천]+\s*만원|백\s*만원|오십\s*만원).{0,30}${MONEY_REQUEST_ACTION}`, 'gi'),
+        new RegExp(String.raw`${MONEY_TRANSFER_ACTION}.{0,30}(돈|비용|수리비|병원비|생활비|합의금|상품권|기프트\s*카드|핀번호|PIN|[0-9]+\s*만원|[일이삼사오육칠팔구십백천]+\s*만원|백\s*만원|오십\s*만원)`, 'gi'),
+        new RegExp(String.raw`계좌.{0,20}([0-9]+\s*만원|[일이삼사오육칠팔구십백천]+\s*만원|백\s*만원|오십\s*만원).{0,20}${MONEY_TRANSFER_ACTION}`, 'gi'),
+        /(엄마|아빠|어머니|아버지|아들|딸|자녀|오빠|누나|형|언니|친구|지인).{0,20}(나야|나다|\s나\s).{0,20}(돈|비용|수리비|병원비|생활비|합의금)\s*좀[ㅠㅜ~!?.\s]*$/g,
       ],
     },
   },
@@ -147,8 +148,9 @@ export const SCAM_SCENARIOS: readonly ScamScenario[] = [
     reason: '휴대폰 고장 또는 번호 변경을 핑계로 본인 확인을 어렵게 만드는 사칭 패턴입니다.',
     patterns: {
       impersonation: [
-        /(폰|휴대폰|핸드폰|카톡).{0,12}(고장|분실|안\s*됨|안돼|못\s*써|액정\s*깨짐)/g,
-        /(번호|연락처).{0,12}(바뀜|변경|새로|임시)/g,
+        /(폰|휴대폰|핸드폰|카톡).{0,12}(고장|분실|잃어버림|잃어버렸|안\s*됨|안돼|안\s*돼|못\s*써|깨짐|깨졌|액정\s*깨짐|로그인\s*안)/g,
+        /(번호|연락처).{0,12}(바뀜|바뀌었|바꿨|변경|새로|임시|저장)/g,
+        /이\s*번호.{0,12}(저장|연락|문자)/g,
       ],
     },
   },
@@ -164,7 +166,7 @@ export const SCAM_SCENARIOS: readonly ScamScenario[] = [
         new RegExp(String.raw`(상품권|문화\s*상품권|기프트\s*카드|구글\s*기프트|핀번호|PIN|pin|편의점).{0,35}(번호|코드|사진|캡처|찍어서|${MONEY_TRANSFER_ACTION}|전송)`, 'gi'),
       ],
       financialLoss: [
-        new RegExp(String.raw`(편의점|상품권|문화\s*상품권|기프트\s*카드|구글\s*기프트).{0,35}(사서|구매|결제|충전|${MONEY_TRANSFER_ACTION}|전송)`, 'g'),
+        new RegExp(String.raw`(편의점|상품권|문화\s*상품권|문상|기프트\s*카드|구글\s*기프트).{0,35}(사서|사구|구매|결제|충전|${MONEY_TRANSFER_ACTION}|전송)`, 'g'),
       ],
     },
   },
@@ -176,9 +178,17 @@ export const SCAM_SCENARIOS: readonly ScamScenario[] = [
     categories: ['impersonation', 'urgency', 'financialLoss'],
     reason: '자녀 사고·납치·감금 위협으로 즉시 합의금 송금을 압박하는 패턴입니다.',
     patterns: {
-      impersonation: [/(자녀|아이|아들|딸|학생|가족).{0,30}(사고|납치|감금|잡혀|다쳤|병원|합의|차에\s*태웠|데리고\s*있)/g],
-      urgency: [/(사고|납치|감금|잡혀|다쳤|협박|위험|해치지|대가).{0,30}(지금|즉시|당장|빨리|긴급|합의|돈|술값)/g],
-      financialLoss: [/(합의금|치료비|병원비|보상금|술값|대가).{0,30}(필요|입금|송금|이체|보내|요구|내야)/g],
+      impersonation: [
+        /(자녀|아이|아들|딸|따님|아드님|학생|가족).{0,30}(사고|교통사고|납치|감금|잡혀|다쳤|병원|수술|수술중|합의|차에\s*태웠|데리고\s*있)/g,
+      ],
+      urgency: [
+        /(사고|교통사고|납치|감금|잡혀|다쳤|수술|수술중|데리고\s*있|협박|위험|해치지|해치기|대가).{0,30}(지금|즉시|당장|빨리|긴급|급함|급해|합의|돈|술값|싫으면)/g,
+      ],
+      financialLoss: [
+        /(자녀|아이|아들|딸|따님|아드님|가족|사고|교통사고|납치|감금|잡혀|다쳤|데리고\s*있).{0,40}(돈|현금).{0,30}(필요|입금|송금|이체|보내|보내라|요구|내야|준비)/g,
+        /(합의금|치료비|병원비|수술비|보상금|술값|대가|현금).{0,30}(필요|입금|송금|이체|보내|보내라|요구|내야|준비|하자|보자|급함|급해)/g,
+        /(합의|현금).{0,30}(하자|보자|준비)/g,
+      ],
     },
   },
   {
@@ -191,10 +201,21 @@ export const SCAM_SCENARIOS: readonly ScamScenario[] = [
     patterns: {
       impersonation: [
         /(검찰|경찰|금감원|금융감독원|수사관|검사|법원|등기).{0,35}(사건|수사|연루|대포통장|범죄|계좌|반송|사건\s*조회)/g,
+        /(수사|사건).{0,35}(돈|계좌|안전한\s*곳|옮겨)/g,
       ],
-      requestedAction: [/(인증번호|OTP|보안카드|승인번호|사건번호).{0,30}(불러|알려|제출|입력|전송|말씀)/gi],
-      personalInfo: [/(계좌|통장|신분증|주민번호|비밀번호).{0,30}(확인|제출|촬영|전송|알려)/g],
+      requestedAction: [
+        /(인증\s*번호|인\s*증\s*번\s*호|OTP|오\s*티\s*피|ㅇ\s*ㅈ\s*ㅂ\s*ㅎ|보안\s*카드|승인\s*번호|사건\s*번호).{0,30}(불러|알려|말해|제출|입력|전송|말씀)/gi,
+        /(법원|등기|사건|사건\s*조회).{0,40}(링크|url|URL|사건\s*조회).{0,30}(접속|열어|확인|입력)/gi,
+      ],
+      personalInfo: [
+        /(계좌|통장|신분증|주민번호|비밀번호).{0,30}(확인|제출|촬영|전송|알려)/g,
+        /(검찰|경찰|금감원|금융감독원|수사관|검사|검\s*사|법원|등기).{0,60}(OTP|오\s*티\s*피|인증\s*번호|인\s*증\s*번\s*호|승인\s*번호).{0,30}(불러|알려|말해|제출|입력|전송|말씀)/gi,
+      ],
       suspiciousLink: [/(인터넷\s*창|주소\s*창|url|URL|링크).{0,30}(열어|비워|검색|접속|입력|확인)/gi],
+      financialLoss: [
+        /(안전한\s*곳|안전\s*계좌).{0,30}(옮겨|이체|송금|보내|입금)/g,
+        /(돈|자금).{0,30}(안전한\s*곳).{0,30}(옮겨|보관)/g,
+      ],
     },
   },
   {
@@ -207,9 +228,12 @@ export const SCAM_SCENARIOS: readonly ScamScenario[] = [
     patterns: {
       impersonation: [/(은행|캐피탈|저축은행|금융회사|정부지원).{0,30}(대출|대환|저금리|정책자금)/g],
       urgency: [/(계약\s*위반|전액\s*상환|위약금|현금\s*우선\s*변제).{0,35}(협박|알림|내야|안\s*내도|상환|납부)/g],
-      financialLoss: [/(대환|저금리|대출|기존\s*대출|위약금).{0,35}(상환|선입금|수수료|보증료|인지세|입금|납부|현금|전달|이체)/g],
+      financialLoss: [
+        /(대환|저금리|저리|대출|기존\s*(?:대출|건)|위약금).{0,35}(상환(?:해야|하셔야|하고|후|부터|먼저|필요|요청|진행)|갚아야|갚으셔야|갚고|선입금|수수료|보증료|인지세|입금|납부|현금|전달|이체)/g,
+        /(은행|상담사|한도|수수료|보증료).{0,35}(입금하면|입금|납부|한도\s*열)/g,
+      ],
       personalInfo: [/(대출|한도|심사).{0,35}(신분증|계좌|비밀번호|인증번호|소득자료)/g],
-      malwareApp: [/(대출\s*신청서|파일|악성\s*앱|앱).{0,35}(보냄|전송|설치|깔려|실행)/g],
+      malwareApp: [/(대출\s*신청서|파일|악성\s*앱|앱|보안\s*프로그램).{0,35}(보냄|전송|설치|깔려|실행|열고)/g],
     },
   },
   {
@@ -235,7 +259,7 @@ export const SCAM_SCENARIOS: readonly ScamScenario[] = [
     patterns: {
       impersonation: [/(카드\s*배송|카드\s*발급|카드사|사고\s*예방팀|보안팀|자산\s*보호).{0,35}(확인|조회|연결|신청|안내)/g],
       requestedAction: [/(인증번호|승인번호|생년월일|성함|원격\s*앱|원격조종|원격제어).{0,35}(말씀|확인|설치|유도|시도|입력)/g],
-      financialLoss: [/(자산\s*보호|범죄수익|지정하는\s*계좌|계좌).{0,35}(이체|송금|금액|자금)/g],
+      financialLoss: [/(자산\s*보호|범죄수익|지정하는\s*계좌).{0,35}(이체|송금|금액|자금)/g],
       personalInfo: [/(성함|생년월일|명의도용|금융\s*자산|계좌).{0,35}(말씀|확인|조회|질문|신청)/g],
       malwareApp: [/(악성\s*앱|원격\s*앱|휴대폰).{0,35}(점검|설치|원격조종|유도)/g],
     },
@@ -285,7 +309,10 @@ export const SCAM_SCENARIOS: readonly ScamScenario[] = [
     reason: '출처불명 앱 또는 원격제어 앱 설치를 요구하는 고위험 악성앱 유도 패턴입니다.',
     patterns: {
       requestedAction: [
-        /(apk|앱|어플|원격제어|원격\s*지원|보안\s*앱|인증\s*앱).{0,30}(설치|실행|허용|권한|접속)/gi,
+        /(apk|앱|어플|원격제어|원격\s*지원|원격지원\s*프로그램|보안\s*(?:앱|어플|프로그램)|인증\s*앱).{0,30}(설치|실행|허용|권한|접근성|접속|깔|받아|코드)/gi,
+      ],
+      malwareApp: [
+        /(앱|어플|원격제어|원격\s*지원|원격지원\s*프로그램|보안\s*(?:앱|어플|프로그램)).{0,30}(설치|실행|허용|권한|접근성|접속|깔|받아|코드)/gi,
       ],
     },
   },
@@ -300,6 +327,7 @@ export const SCAM_SCENARIOS: readonly ScamScenario[] = [
       financialLoss: [
         /(투자\s*리딩|리딩방|고수익|원금\s*보장|단기\s*수익|수익\s*보장).{0,35}(입금|투자|참여|가입|추천)/g,
         /(현금\s*수거|현금\s*전달|통장\s*전달|계좌\s*대여).{0,35}(알바|아르바이트|수당|일당|고수익)/g,
+        /(단기\s*부업|부업).{0,35}(현금\s*전달|전달만|수고비|일당|수당)/g,
       ],
       personalInfo: [/(통장|계좌|체크카드|OTP).{0,35}(대여|전달|보내|맡겨)/gi],
     },

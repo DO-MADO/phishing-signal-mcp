@@ -80,6 +80,55 @@ test('구어체 금전 표현은 정상 입금·생활비 문맥까지 과탐하
   assert.equal(levelOf('아빠 나 오늘 급행열차 타고 가'), '낮음');
 });
 
+test('우회 표현의 가족 사칭·번호변경·기관 사칭도 미탐하지 않는다', () => {
+  assertAtLeast(levelOf('엄마 나 폰 깨짐 돈 부쳐줘'), '높음');
+  assertAtLeast(levelOf('엄마 나 휴대폰 안돼 생활비 조금만 부탁'), '높음');
+  assertAtLeast(levelOf('엄마 나 지금 큰일났어 돈 가능해?'), '높음');
+  assertAtLeast(levelOf('폰 잃어버림 이 번호 저장해줘'), '주의');
+  assertAtLeast(levelOf('번호 바꿨어 문자로만 연락해'), '주의');
+  assert.equal(levelOf('검 사 입니다 사건 확인하려면 인증 번호 말해주세요'), '매우 높음');
+});
+
+test('협박·대출·악성앱·현금수거책 변형 표현을 보수적으로 탐지한다', () => {
+  assert.equal(levelOf('아들을 데리고 있다 해치기 싫으면 합의하자'), '매우 높음');
+  assert.equal(levelOf('법원 등기 반송 사건조회 링크 접속하세요'), '매우 높음');
+  assertAtLeast(levelOf('은행 상담사입니다 수수료 입금하면 한도 열립니다'), '높음');
+  assertAtLeast(levelOf('저리 대출 가능 기존 건 먼저 갚아야 해요'), '높음');
+  assert.equal(levelOf('보안 어플 깔고 접근성 허용 눌러주세요'), '매우 높음');
+  assert.equal(levelOf('원격지원 프로그램 받아서 접속 코드 알려줘'), '매우 높음');
+  assertAtLeast(levelOf('단기 부업 현금 전달만 하면 수고비 바로 줍니다'), '높음');
+});
+
+test('송금동사·인증정보 난독화·자녀 위급 표현을 추가로 방어한다', () => {
+  assertAtLeast(levelOf('아들인데 급한일 생겼어 계좌로 백만원 넣어줘'), '높음');
+  assertAtLeast(levelOf('엄마 나 돈 쏴줘'), '높음');
+  assertAtLeast(levelOf('형 50만원만 보내줄 수 있어?'), '높음');
+  assertAtLeast(levelOf('인 증 번 호 알려줘'), '높음');
+  assertAtLeast(levelOf('오티피 불러줘'), '높음');
+  assertAtLeast(levelOf('ㅇㅈㅂㅎ 알려줘'), '높음');
+  assert.equal(levelOf('아이 데리고 있다 돈 보내'), '매우 높음');
+  assertAtLeast(levelOf('따님 교통사고 수술중 병원비 급함'), '높음');
+});
+
+test('교육·뉴스·일상 설명 문맥은 단독 키워드만으로 과탐하지 않는다', () => {
+  assert.equal(levelOf('계좌이체 수수료가 무료라 편하다'), '낮음');
+  assert.equal(levelOf('계좌이체 한도 늘리는 법 알려줘'), '낮음');
+  assert.equal(levelOf('생일 선물로 상품권을 받았다'), '낮음');
+  assert.equal(levelOf('기프트카드 디자인이 예쁘다'), '낮음');
+  assert.equal(levelOf('아이 사고 예방 교육 자료를 읽었다'), '낮음');
+  assert.equal(levelOf('검찰 관련 뉴스를 봤다'), '낮음');
+  assert.equal(levelOf('회사 보안앱 설치 방법을 내부 게시판에서 봤다'), '낮음');
+  assert.equal(levelOf('앱 설치하는 법 좀 알려줘'), '낮음');
+  assert.equal(levelOf('비밀번호 까먹었어'), '낮음');
+  assert.equal(levelOf('방금 인증번호 입력해서 로그인했어'), '낮음');
+  assert.equal(levelOf('나 요즘 원격으로 재택근무'), '낮음');
+  assert.equal(levelOf('신분증 챙겨서 와'), '낮음');
+  assert.equal(levelOf('보안카드 어디 뒀더라'), '낮음');
+  assert.equal(levelOf('OTP 카드 재발급 받아야 해'), '낮음');
+  assert.equal(levelOf('OTP는 절대 알려주면 안 된다고 배웠다'), '낮음');
+  assert.equal(levelOf('보안카드 번호를 요구하면 피싱일 수 있다'), '낮음');
+});
+
 test('상품권 PIN 요구는 매우 높음으로 판단한다', () => {
   const text = '편의점에서 상품권 사서 PIN 보내줘.';
 
