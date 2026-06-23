@@ -4,7 +4,7 @@
 // - 의심 링크 등 매칭값은 디팽(defang)하여 클릭 가능한 형태로 재노출하지 않는다.
 // - 응답 바이트 길이 24k 가드.
 
-import type { DetectedSignal } from '../engine/signals.js';
+import type { DetectedSignal, SignalId } from '../engine/signals.js';
 import type { RiskLevel } from '../engine/score.js';
 import {
   ALREADY_PAID_URGENCY,
@@ -65,6 +65,26 @@ export function renderChannels(channels: readonly ReportChannel[]): string {
       return `${c.priority}. ${head} — ${c.purpose}`;
     })
     .join('\n');
+}
+
+const EVIDENCE_PATTERNS: Record<SignalId, RegExp> = {
+  impersonation: /(검찰|경찰|금감원|법원|정부|은행|택배|카드사|엄마|아빠|아들|딸|친구|지인|폰\s*고장|번호\s*변경|카톡\s*안\s*됨)/gi,
+  requestedAction: /(인증번호|승인번호|OTP|보안카드|원격제어|화면\s*공유|상품권|PIN|핀번호|사진|캡처)/gi,
+  urgency: /(급해|급하게|급함|급한데|급행|즉시|지금|바로|빨리|당장|긴급|구속|체포|압류|동결|협박)/gi,
+  financialLoss: /(돈\s*좀|돈|송금|입금\s*좀|입금|이체|납부|보내\s*줘[요용욤여잉ㅇ~!?.ㅠㅜ]*|보내\s*줭|보내\s*죵|보내\s*주라|빌려\s*줘[요용욤여잉ㅇ~!?.ㅠㅜ]*|빌려\s*줄래|수리비|병원비|합의금|상품권|PIN|안전\s*계좌)/gi,
+  personalInfo: /(주민번호|계좌번호|비밀번호|비번|카드번호|보안카드|신분증|통장\s*사본|cvc|cvv)/gi,
+  malwareApp: /(apk|앱\s*설치|어플\s*설치|설치\s*파일|보안\s*앱|인증\s*앱|출처를?\s*알\s*수\s*없는)/gi,
+  suspiciousLink: /(\[?\s*web\s*발신\s*\]?|국제\s*발신|국외\s*발신|https?:\/\/\S+|bit\.ly|tinyurl\.com|t\.co|goo\.gl|링크|URL|url)/gi,
+};
+
+function compactEvidence(signalId: SignalId, match: string): string {
+  const safe = defang(match).replace(/\s+/g, ' ').trim();
+  const tokens = [...safe.matchAll(EVIDENCE_PATTERNS[signalId])]
+    .map(([token]) => token.trim())
+    .filter(Boolean);
+  const unique = [...new Set(tokens)];
+  if (unique.length > 0) return unique.slice(0, 4).join(', ');
+  return safe.length > 24 ? `${safe.slice(0, 24)}…` : safe;
 }
 
 const DONT_DO: Record<Situation, string[]> = {
@@ -135,7 +155,7 @@ export function formatRiskAnalysis(view: RiskAnalysisView): string {
     for (const s of view.signals) {
       const evidence = s.matches
         .slice(0, 5)
-        .map((m) => defang(m))
+        .map((m) => compactEvidence(s.id, m))
         .join(', ');
       lines.push(`- **${s.label}**: ${evidence}`);
     }
