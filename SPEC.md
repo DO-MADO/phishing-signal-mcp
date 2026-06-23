@@ -1,0 +1,228 @@
+# 피싱 신호등 (PhishingSignal) — MCP Server SPEC
+
+> 이 문서는 프로젝트의 **단일 진실 출처(Single Source of Truth)**다.
+> 코드 생성/수정 전 항상 이 문서를 먼저 읽는다. 값이 바뀌면 이 문서부터 갱신한다.
+
+---
+
+## 0. 한 줄 정의
+
+수상한 전화·문자·카톡 내용을 붙여넣으면, **보이스피싱 위험도를 근거와 함께** 설명하고
+**지금 해야 할 행동**과 **공식 신고 루트**를 안내하는 MCP 서버.
+
+- 포지셔닝: "규칙 기반"이라고 부르지 않는다. **"근거 설명형 위험도 판별 / Explainable Risk Scoring"**.
+- 판정은 LLM 호출이 아니라 **결정적(deterministic) 규칙 엔진**으로 한다.
+  - 이유: ① 응답 100ms 충족 ② 무과금 ③ 일관성 ④ 탐지 신호가 그대로 "판단 근거"가 됨.
+- LLM(호스트, 카카오톡/Claude 등)은 자연어 이해를 맡고, 이 MCP는 판정·근거·행동을 반환한다.
+
+---
+
+## 1. 공모전 / 배포 컨텍스트 (Agentic Player 10 · PlayMCP in KC)
+
+- 예선 접수: **2026-06-15 ~ 2026-07-14** (이 기간에만 PlayMCP in KC 서버 발급 가능)
+- 배포 방식: **Git 소스 빌드** (또는 컨테이너 이미지). 본 프로젝트는 Git 소스 빌드 사용.
+- **★ 레포 루트(또는 지정 경로)에 `Dockerfile` 필수** — 없으면 빌드 불가.
+- 발급된 Endpoint URL → PlayMCP 개발자 콘솔에 "임시 등록" → 도구함 추가 → AI채팅 테스트 → "심사 요청".
+- 심사 통과 후 공개 상태를 **"전체 공개"**로 전환해야 공모전 접수 가능.
+- 계정당 MCP 서버 최대 2대.
+- 본선: 8/31~9/28 카카오톡 이용자 투표 → 최종 10팀 10/23 발표.
+
+---
+
+## 2. 네이밍 (확정)
+
+| 용도 | 값 | 비고 |
+|---|---|---|
+| GitHub 레포명 | `phishing-signal-mcp` | 케밥케이스, 영문, `-mcp` 접미사 |
+| PlayMCP 등록명(표시) | `피싱 신호등` | 본선 대중성 + 기능 명확 |
+| 영문 식별자/MCP 식별자 | `PhishingSignal` / `phishing-signal` | 콘솔/코드용 |
+| MCP server name(영문) | `phishing-signal` | "kakao" 미포함, AI/Bot/Service 키워드 미사용 |
+
+- description(영문+국문 병기, 규정 요구):
+  `Analyzes suspicious calls, SMS, or messenger texts for voice-phishing risk, returning a risk level with evidence and concrete action guides. 피싱 신호등(PhishingSignal).`
+
+---
+
+## 3. 스택 / 런타임 (확정)
+
+- 언어: **TypeScript**
+- 런타임: **Node.js 22 LTS**
+- 패키지 매니저: **npm**
+- MCP SDK: **`@modelcontextprotocol/sdk`** (공식, MIT) — 설치는 사용자 승인 후
+- 전송: **Streamable HTTP**, **Remote(공개 URL)**, **Stateless(no session) 권장**
+- MCP 스펙 버전: 최소 `2025-03-26` ~ 최대 `2025-11-25` 충족
+- 사전 점검: **MCP Inspector**로 스펙 준수 확인
+
+---
+
+## 4. 툴 구성 (MVP = 2개)
+
+> 번호 평판 조회 / URL 평판 / 음성 분석 / 신고 자동화는 **v2로 분리**(MVP 제외).
+
+### 4.1 `analyzePhishingRisk`
+- 역할: 입력 텍스트에서 위험 신호 탐지 → 가중치 점수화 → 위험도 구간 + 근거 + 행동 가이드 반환.
+- 입력 스키마:
+  ```ts
+  type AnalyzePhishingRiskInput = {
+    text: string;                      // 필수: 의심 문자/통화/메시지 내용 붙여넣기
+    context?: {                        // 선택: 있으면 행동 가이드 정밀화
+      channel?: 'phone' | 'sms' | 'kakao' | 'unknown';
+      alreadySentMoney?: boolean;
+      alreadyInstalledApp?: boolean;
+      alreadySharedPersonalInfo?: boolean;
+    };
+  };
+  ```
+- 출력(정제된 마크다운, 24k 미만):
+  - 위험도: `낮음 | 주의 | 높음 | 매우 높음`
+  - 판단 근거: 탐지된 위험 신호 목록(= 근거)
+  - 하지 말아야 할 행동
+  - 지금 해야 할 행동
+  - (상황에 맞는) 공식 신고 루트 요약
+  - 디스클레이머(아래 §7)
+
+### 4.2 `getReportChannels`
+- 역할: 상황별 공식 신고/대응 루트를 우선순위와 함께 반환(정적, 초고속).
+- 입력 스키마:
+  ```ts
+  type GetReportChannelsInput = {
+    situation: 'suspiciousOnly' | 'alreadyPaid' | 'personalInfoExposed' | 'malwareInstalled';
+  };
+  ```
+- 출력: §6의 확정값 기반 마크다운.
+
+### 4.3 공통 규칙 (PlayMCP)
+- 각 툴 필수 property: `name, description, inputSchema, annotations`
+- `annotations`: `title, readOnlyHint, destructiveHint, openWorldHint, idempotentHint` **모두 값 지정**
+  - 두 툴 모두 읽기 전용 판정/조회 → `readOnlyHint: true, destructiveHint: false, idempotentHint: true`
+  - 외부 호출 없음(자체 연산/정적 데이터) → `openWorldHint: false`
+- 툴 이름: 영숫자 + `_` + `-`, 1~128자, case-sensitive, 중복 금지
+- description: 영문 권장, **서비스명(영문/국문 병기) 포함**, 1,024자 이내
+- result 크기 최소화, API 원본 그대로 반환 금지(정제된 마크다운)
+
+---
+
+## 5. 위험 신호 7종 → 점수 → 구간 (Explainable Risk Scoring)
+
+탐지 카테고리(각 신호가 곧 "판단 근거"):
+
+1. 기관 사칭 (검찰·경찰·금감원·은행·택배·정부기관 등 사칭 표현)
+2. 요구 행동 — 계좌이체 / 인증번호(OTP) 공유 / 원격제어 앱(AnyDesk·TeamViewer 등) 설치
+3. 긴급성 압박 (즉시·지금 당장·기한·구속·범죄 연루 등 시간 압박)
+4. 금전 피해 가능성 (송금·이체·대납·안전계좌·보증금·선입금 요구)
+5. 개인정보 탈취 (주민번호·계좌·비밀번호·신분증 사진 요구)
+6. 악성앱 설치 유도 (apk 링크, 출처불명 앱 설치 유도)
+7. 의심 링크 (단축 URL, 비공식 도메인, [Web발신] + 링크 조합 등)
+
+설계 원칙:
+- 각 신호에 가중치 부여 → 합산 점수 → 구간 매핑(낮음/주의/높음/매우 높음).
+- 임계값(구간 경계)은 **보수적으로**: 오탐(false positive)보다 **미탐(false negative) 회피 우선**.
+- 초기 가중치/임계값은 v1에서 하드코딩 후, 실제 피싱 샘플로 캘리브레이션(후속).
+- 탐지는 정규식/키워드 사전 기반이되, **카테고리 단위로 구조화**하여 "단순 키워드 매칭"으로 보이지 않게 한다.
+
+---
+
+## 6. 공식 신고 채널 — 확정값 (검증 완료)
+
+> 출처: 경찰청 통합대응단 1394 개통(2026-02-01, 정책브리핑/언론 복수 확인),
+> 금융감독원 보이스피싱지킴이, KISA 118, 금융소비자보호재단 안내.
+> **구 대표번호(1566-1688 / 1566-1188 혼재)는 최신성 불안정 → 코드에서 제외. 1394만 사용.**
+
+```ts
+const REPORT_CHANNELS = {
+  // 이미 송금/이체한 경우 — "즉시", 우선순위 순
+  alreadyPaid: [
+    { name: '경찰청', phone: '112', purpose: '피해 신고 및 사기이용계좌 지급정지 요청', priority: 1 },
+    { name: '송금·입금 금융회사 고객센터', phone: '각 금융회사 대표번호', purpose: '계좌 지급정지 요청', priority: 2 },
+    { name: '금융감독원', phone: '1332', purpose: '피해 상담 및 지급정지·환급 안내', priority: 3 },
+    { name: '전기통신금융사기 통합대응단 신고대응센터', phone: '1394', purpose: '24시간 피해상담·제보·관계기관 연계', priority: 4 },
+  ],
+  // 의심 문자·전화만 받은 단계 (송금 전)
+  suspiciousOnly: [
+    { name: '전기통신금융사기 통합대응단 신고대응센터', phone: '1394', purpose: '피싱 여부 확인·제보(24시간)', priority: 1 },
+    { name: 'KISA 상담센터', phone: '118', purpose: '스미싱·불법스팸·의심문자 상담/신고', priority: 2 },
+  ],
+  // 개인정보·신분증 노출
+  personalInfoExposed: [
+    { name: '금융감독원 개인정보노출자 사고예방시스템', url: 'pd.fss.or.kr', purpose: '노출 등록 → 신규 계좌·카드·대출 개설 차단', priority: 1 },
+    { name: '명의도용방지서비스 엠세이퍼', url: 'msafer.or.kr', purpose: '명의도용 휴대전화 개통 여부 확인', priority: 2 },
+  ],
+  // 악성앱 설치 의심
+  malwareInstalled: [
+    { name: '휴대전화 초기화 / 통신사 고객센터', purpose: '악성 앱 삭제, 단말 초기화', priority: 1 },
+    { name: '공동인증서·OTP 재발급', purpose: '탈취 대비 인증수단 폐기·재발급', priority: 2 },
+  ],
+};
+```
+
+- 송금 상황 문구는 "30분 골든타임"을 공식 문구로 박지 않고 **"즉시"**로 표현:
+  > "송금했다면 시간이 가장 중요합니다. **즉시** 112·거래 금융회사·1332·1394에 연락해 지급정지와 피해상담을 요청하세요."
+
+---
+
+## 7. 개인정보 / 안전 정책 (심사 직결)
+
+- **미저장**: 입력 내용은 판별 목적 외 저장하지 않는다(stateless).
+- **마스킹**: 입력에 포함된 계좌번호/주민번호/전화번호 등은 처리 전 마스킹. (정규식 범위는 보수적으로, 리뷰 대상)
+- **금지 수집/전송**: 주민등록번호, 운전면허번호, 여권번호, 외국인등록번호, 카드번호, 계좌번호를 요구하거나 응답으로 전송하지 않는다.
+- **민감정보 입력 금지 안내**를 출력에 포함(사용자가 OTP·비밀번호 등을 입력하지 않도록).
+- **디스클레이머(모든 분석 출력에 고정)**:
+  > "이 안내는 위험 신호에 대한 참고용 가이드이며 법적 판단이 아닙니다. 실제 상황에서는 공식 기관과 금융회사의 안내를 우선하세요."
+
+---
+
+## 8. 성능 / 안정성 (심사 정량 기준)
+
+- 응답: **평균 100ms 이내, p99 3,000ms 필수** → 외부 호출 없는 자체 연산/정적 데이터로 충족.
+- Tool Response **24k 초과 시 에러** → 출력 길이 가드.
+- 인증 불필요(개인정보 OAuth 없음). 필요해질 경우에만 표준 OAuth/커스텀 헤더.
+- 예외 처리: 빈 입력/초장문/비정상 입력에 안전한 기본 응답.
+
+---
+
+## 9. 디렉터리 구조 (예정)
+
+```
+phishing-signal-mcp/
+├─ Dockerfile              # ★ PlayMCP in KC Git 빌드 필수
+├─ package.json            # Node 22 / npm, SDK 명시(설치는 승인 후)
+├─ tsconfig.json
+├─ SPEC.md                 # 본 문서
+├─ CLAUDE.md               # Claude Code 프로젝트 지침
+├─ src/
+│  ├─ server.ts            # MCP 서버 부트스트랩(Streamable HTTP, stateless)
+│  ├─ tools/
+│  │  ├─ analyzePhishingRisk.ts
+│  │  └─ getReportChannels.ts
+│  ├─ engine/
+│  │  ├─ signals.ts        # 위험 신호 7종 탐지기(정규식/사전)
+│  │  ├─ score.ts          # 가중치 합산 → 구간 매핑
+│  │  └─ mask.ts           # 민감정보 마스킹
+│  ├─ data/
+│  │  └─ reportChannels.ts # §6 확정값
+│  └─ format/
+│     └─ markdown.ts       # 출력 포맷터(24k 가드 포함)
+└─ test/
+   ├─ score.test.ts
+   ├─ signals.test.ts
+   └─ mask.test.ts
+```
+
+---
+
+## 10. 빌드 순서 (다음 작업)
+
+1. `package.json`(SDK 명시) + `tsconfig.json` + `Dockerfile` 스캐폴딩 — **의존성 설치는 승인 후**
+2. `engine` (signals → score → mask) + 단위 테스트
+3. `tools/analyzePhishingRisk` (스키마 + annotations 5종 + 마크다운 출력)
+4. `tools/getReportChannels` (§6 확정값)
+5. `server.ts` (Streamable HTTP, stateless)
+6. 로컬 실행 + **MCP Inspector** 점검 명령
+
+---
+
+## 11. 미해결 / 후속 (불확실성)
+
+- 마스킹 정규식 범위: 과탐(정상 숫자 마스킹) vs 누락 사이 균형 → 리뷰 필요.
+- 위험도 임계값 캘리브레이션: 실제 피싱 샘플 확보 후 튜닝.
+- v2 후보: 번호 평판 조회(합법·무상 데이터 출처 선행 조사 필요), URL 평판, 음성 분석.

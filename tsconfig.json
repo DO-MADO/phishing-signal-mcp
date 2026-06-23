@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    /* 런타임: Node.js 22 LTS (SPEC §3) */
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+
+    /* 입출력: src → dist (SPEC §9 디렉터리 구조) */
+    "rootDir": "src",
+    "outDir": "dist",
+    "sourceMap": true,
+    "declaration": false,
+
+    /* 엄격성 — 안전한 동작 우선(CLAUDE.md §1) */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    // exactOptionalPropertyTypes는 @modelcontextprotocol/sdk 공개 타입 정의와
+    // 충돌(stateless sessionIdGenerator:undefined, Transport.onclose)하여 비활성화.
+
+    /* 모듈 상호운용 / 위생 */
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "test"]
+}
