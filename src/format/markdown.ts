@@ -69,7 +69,7 @@ export function renderChannels(channels: readonly ReportChannel[]): string {
 
 const DONT_DO: Record<Situation, string[]> = {
   suspiciousOnly: [
-    '인증번호(OTP)·비밀번호·계좌번호를 알려주지 마세요.',
+    '인증번호(OTP)·비밀번호·계좌번호·신분증 정보를 알려주지 마세요.',
     '상대가 보낸 링크를 누르거나 첨부 파일을 열지 마세요.',
     '상대가 안내하는 앱(원격제어·보안앱 등)을 설치하지 마세요.',
     '재촉에 떠밀려 송금/이체하지 마세요.',
@@ -90,8 +90,8 @@ const DONT_DO: Record<Situation, string[]> = {
 
 const DO_NOW: Record<Situation, string[]> = {
   suspiciousOnly: [
-    '상대가 주장한 기관/지인에게 공식 대표번호 또는 기존 연락처로 직접 확인하세요.',
-    '의심 내용은 삭제하지 말고 캡처해 아래 채널로 신고/상담하세요.',
+    '기관·지인 여부는 공식 대표번호 또는 기존 연락처로 직접 확인하세요.',
+    '통화기록·문자·대화 내용 등 남아 있는 기록은 삭제하지 말고 보존한 뒤 아래 채널로 신고/상담하세요.',
   ],
   alreadyPaid: [ALREADY_PAID_URGENCY],
   personalInfoExposed: [
@@ -107,9 +107,9 @@ const DO_NOW: Record<Situation, string[]> = {
 export type AnalysisChannel = 'phone' | 'sms' | 'kakao' | 'unknown';
 
 const CHANNEL_DO_NOW: Record<AnalysisChannel, string[]> = {
-  phone: ['통화 중이라면 바로 끊고, 상대가 알려준 번호가 아니라 공식 대표번호로 직접 다시 확인하세요.'],
-  sms: ['문자 링크·첨부를 열지 말고, 발신번호와 수신 시간을 함께 보존하세요.'],
-  kakao: ['메신저 대화방의 링크·파일을 열지 말고, 기존 연락처나 다른 채널로 본인 여부를 직접 확인하세요.'],
+  phone: ['통화 중이라면 바로 끊고, 상대가 알려준 번호로 다시 걸지 마세요.'],
+  sms: ['문자 링크·첨부는 열지 말고, 발신번호와 수신 시간을 함께 보존하세요.'],
+  kakao: ['메신저 링크·파일은 열지 말고, 대화방을 나가거나 삭제하기 전에 내용을 보존하세요.'],
   unknown: [],
 };
 

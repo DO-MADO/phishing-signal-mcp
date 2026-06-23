@@ -51,10 +51,15 @@ test('수신 채널에 따라 행동 가이드를 정밀화한다', () => {
   const sms = analyzePhishingRisk({ text: baseText, context: { channel: 'sms' } });
   const kakao = analyzePhishingRisk({ text: baseText, context: { channel: 'kakao' } });
 
+  assert.match(phone, /계좌번호·신분증 정보를 알려주지 마세요/);
   assert.match(phone, /상대가 보낸 링크를 누르거나 첨부 파일을 열지 마세요/);
+  assert.match(phone, /기관·지인 여부는 공식 대표번호 또는 기존 연락처로 직접 확인하세요/);
+  assert.match(phone, /통화기록·문자·대화 내용 등 남아 있는 기록은 삭제하지 말고 보존/);
   assert.match(phone, /통화 중이라면 바로 끊고/);
-  assert.match(sms, /문자 링크·첨부를 열지 말고/);
-  assert.match(kakao, /메신저 대화방의 링크·파일을 열지 말고/);
+  assert.match(sms, /문자 링크·첨부는 열지 말고/);
+  assert.match(kakao, /메신저 링크·파일은 열지 말고/);
+  assert.doesNotMatch(phone, /의심 내용은 삭제하지 말고 캡처/);
+  assert.doesNotMatch(phone, /상대가 주장한 기관\/지인/);
   assert.doesNotMatch(phone, /문자·메신저의 링크/);
   assert.doesNotMatch(sms, /통화 중이라면 바로 끊고/);
   assert.doesNotMatch(kakao, /통화 중이라면 바로 끊고/);
