@@ -93,6 +93,13 @@ test('계좌 요청은 신뢰 관계 정산 context가 있을 때만 낮춘다',
     analyzePhishingRisk({ text: smishing, context: { senderKnown: true, relationship: 'friend' } }),
     /위험도: (높음|매우 높음)/,
   );
+  assert.match(
+    analyzePhishingRisk({
+      text: '등록금 보내야 하니까 계좌번호랑 주민번호도 같이 알려줘',
+      context: { senderKnown: true, relationship: 'family' },
+    }),
+    /위험도: (높음|매우 높음)/,
+  );
 });
 
 test('응답은 24k 바이트 한도를 넘지 않는다', () => {

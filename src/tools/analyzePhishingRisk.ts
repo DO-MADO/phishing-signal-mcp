@@ -71,6 +71,8 @@ const ACCOUNT_REQUEST_TARGET_PATTERN = new RegExp(ACCOUNT_REQUEST_TARGET, 'i');
 const TRUSTED_ACCOUNT_PURPOSE_PATTERN = new RegExp(TRUSTED_ACCOUNT_PURPOSE, 'i');
 const ACCOUNT_REQUEST_ACTION_PATTERN = /(알려|확인|보내|남겨|다시\s*알려|입금할게|송금할게|이체할게)/i;
 const HIGH_RISK_CONTEXT_SIGNAL_IDS = new Set(['impersonation', 'urgency', 'requestedAction', 'malwareApp', 'suspiciousLink']);
+const NON_ACCOUNT_PERSONAL_INFO_PATTERN =
+  /(주민\s*(?:등록\s*)?번호|신분증|통장\s*(?:사본|사진)|카드\s*번호|비밀\s*번호|비밀번호|비번|cvc|cvv|여권|운전\s*면허|외국인\s*등록)/i;
 
 function hasTrustedAccountContext(context: AnalyzePhishingRiskInput['context']): boolean {
   if (!context) return false;
@@ -79,7 +81,9 @@ function hasTrustedAccountContext(context: AnalyzePhishingRiskInput['context']):
 }
 
 function isAccountOnlySignal(signal: DetectedSignal): boolean {
-  return signal.id === 'personalInfo' && signal.matches.some((match) => ACCOUNT_REQUEST_TARGET_PATTERN.test(match));
+  if (signal.id !== 'personalInfo') return false;
+  if (signal.matches.some((match) => NON_ACCOUNT_PERSONAL_INFO_PATTERN.test(match))) return false;
+  return signal.matches.some((match) => ACCOUNT_REQUEST_TARGET_PATTERN.test(match));
 }
 
 function isTrustedAccountSettlementText(text: string): boolean {
