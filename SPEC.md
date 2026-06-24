@@ -29,15 +29,12 @@
 
 ## 2. 네이밍 (확정)
 
-- GitHub 레포명: `phishing-signal-mcp`
-  - 케밥케이스, 영문, `-mcp` 접미사.
-- PlayMCP 등록명(표시): `피싱 신호등`
-  - 기능을 직관적으로 설명하는 표시명.
-- 영문 식별자/MCP 식별자: `PhishingSignal` / `phishing-signal`
-  - 콘솔/코드용.
-- MCP server name(영문): `phishing-signal`
-  - "kakao" 미포함.
-  - AI/Bot/Service 키워드 미사용.
+| 용도 | 값 | 비고 |
+|---|---|---|
+| GitHub 레포명 | `phishing-signal-mcp` | 케밥케이스, 영문, `-mcp` 접미사 |
+| PlayMCP 등록명(표시) | `피싱 신호등` | 기능을 직관적으로 설명하는 표시명 |
+| 영문 식별자/MCP 식별자 | `PhishingSignal` / `phishing-signal` | 콘솔/코드용 |
+| MCP server name(영문) | `phishing-signal` | "kakao" 미포함, AI/Bot/Service 키워드 미사용 |
 
 - description(영문+국문 병기, 규정 요구):
   `Analyzes suspicious calls, SMS, or messenger texts for voice-phishing risk, returning a risk level with evidence and concrete action guides. 피싱 신호등(PhishingSignal).`
@@ -62,24 +59,20 @@
 
 ### 4.1 `analyzePhishingRisk`
 - 역할: 입력 텍스트에서 위험 신호 탐지 → 가중치 점수화 → 30초 안전 브레이크 + 위험도 구간 + 근거 + 행동 가이드 반환.
-- 입력 필드:
-  - `text`(필수): 의심 문자/통화/메시지 내용.
-  - `context.channel`: 수신 채널.
-    - `phone`: 전화
-    - `sms`: 문자
-    - `kakao`: 카카오톡/메신저
-    - `unknown`: 알 수 없음
-  - `context.senderKnown`: 기존 연락처/지인으로 확인된 상대인지.
-    - 상대가 주장한 신원만으로 `true`로 보지 않는다.
-  - `context.relationship`: 보낸 사람과의 관계.
-    - `family`: 가족
-    - `friend`: 친구/지인
-    - `coworker`: 직장동료
-    - `merchant`: 판매자/거래상대
-    - `unknown`: 알 수 없음
-  - `context.alreadySentMoney`: 이미 송금/이체했는지.
-  - `context.alreadyInstalledApp`: 상대가 안내한 앱을 이미 설치했는지.
-  - `context.alreadySharedPersonalInfo`: 개인정보·신분증·계좌·비밀번호 등을 이미 알려줬는지.
+- 입력 스키마:
+  ```ts
+  type AnalyzePhishingRiskInput = {
+    text: string;                      // 필수: 의심 문자/통화/메시지 내용 붙여넣기
+    context?: {                        // 선택: 있으면 행동 가이드 정밀화
+      channel?: 'phone' | 'sms' | 'kakao' | 'unknown'; // phone=전화, sms=문자, kakao=카카오톡/메신저, unknown=알 수 없음
+      senderKnown?: boolean;           // 기존 연락처/지인으로 확인된 상대인지. 상대 주장만으로 true 금지
+      relationship?: 'family' | 'friend' | 'coworker' | 'merchant' | 'unknown'; // 가족/친구·지인/직장동료/거래상대/알 수 없음
+      alreadySentMoney?: boolean;      // 이미 송금/이체했는지
+      alreadyInstalledApp?: boolean;   // 상대가 안내한 앱을 이미 설치했는지
+      alreadySharedPersonalInfo?: boolean; // 개인정보·신분증·계좌·비밀번호 등을 이미 알려줬는지
+    };
+  };
+  ```
 - 출력(정제된 마크다운, 24k 미만):
   - 30초 안전 브레이크: 링크 클릭 / 앱 설치 / 송금 / 인증번호 공유 중단 안내
   - 위험도: `낮음 | 주의 | 높음 | 매우 높음`
@@ -92,12 +85,13 @@
 
 ### 4.2 `getReportChannels`
 - 역할: 상황별 공식 신고/대응 루트를 우선순위와 함께 반환(정적, 초고속).
-- 입력 필드:
-  - `situation`: 현재 상황.
-    - `suspiciousOnly`: 의심만 받음
-    - `alreadyPaid`: 이미 송금/이체
-    - `personalInfoExposed`: 개인정보 노출
-    - `malwareInstalled`: 악성앱 설치 의심
+- 입력 스키마:
+  ```ts
+  type GetReportChannelsInput = {
+    situation: 'suspiciousOnly' | 'alreadyPaid' | 'personalInfoExposed' | 'malwareInstalled';
+    // suspiciousOnly=의심만 받음, alreadyPaid=이미 송금/이체, personalInfoExposed=개인정보 노출, malwareInstalled=악성앱 설치 의심
+  };
+  ```
 - 출력: §6의 확정값 기반 마크다운.
 
 ### 4.3 공통 규칙 (PlayMCP)
@@ -137,39 +131,32 @@
 > 금융감독원 보이스피싱지킴이, KISA 118, 금융소비자보호재단 안내.
 > **구 대표번호(1566-1688 / 1566-1188 혼재)는 최신성 불안정 → 코드에서 제외. 1394만 사용.**
 
-### 이미 송금/이체한 경우 (`alreadyPaid`)
-
-1. 경찰청 `112`
-   - 피해 신고 및 사기이용계좌 지급정지 요청.
-2. 송금·입금 금융회사 고객센터
-   - 각 금융회사 대표번호로 계좌 지급정지 요청.
-3. 금융감독원 `1332`
-   - 피해 상담 및 지급정지·환급 안내.
-4. 전기통신금융사기 통합대응단 신고대응센터 `1394`
-   - 24시간 피해상담·제보·관계기관 연계.
-
-### 의심 문자·전화만 받은 단계 (`suspiciousOnly`)
-
-1. 전기통신금융사기 통합대응단 신고대응센터 `1394`
-   - 피싱 여부 확인·제보(24시간).
-2. KISA 상담센터 `118`
-   - 스미싱·불법스팸·의심문자 상담/신고.
-
-### 개인정보·신분증 노출 (`personalInfoExposed`)
-
-1. 금융감독원 개인정보노출자 사고예방시스템
-   - `pd.fss.or.kr`
-   - 노출 등록 → 신규 계좌·카드·대출 개설 차단.
-2. 명의도용방지서비스 엠세이퍼
-   - `msafer.or.kr`
-   - 명의도용 휴대전화 개통 여부 확인.
-
-### 악성앱 설치 의심 (`malwareInstalled`)
-
-1. 휴대전화 초기화 / 통신사 고객센터
-   - 악성 앱 삭제, 단말 초기화.
-2. 공동인증서·OTP 재발급
-   - 탈취 대비 인증수단 폐기·재발급.
+```ts
+const REPORT_CHANNELS = {
+  // 이미 송금/이체한 경우 — "즉시", 우선순위 순
+  alreadyPaid: [
+    { name: '경찰청', phone: '112', purpose: '피해 신고 및 사기이용계좌 지급정지 요청', priority: 1 },
+    { name: '송금·입금 금융회사 고객센터', phone: '각 금융회사 대표번호', purpose: '계좌 지급정지 요청', priority: 2 },
+    { name: '금융감독원', phone: '1332', purpose: '피해 상담 및 지급정지·환급 안내', priority: 3 },
+    { name: '전기통신금융사기 통합대응단 신고대응센터', phone: '1394', purpose: '24시간 피해상담·제보·관계기관 연계', priority: 4 },
+  ],
+  // 의심 문자·전화만 받은 단계 (송금 전)
+  suspiciousOnly: [
+    { name: '전기통신금융사기 통합대응단 신고대응센터', phone: '1394', purpose: '피싱 여부 확인·제보(24시간)', priority: 1 },
+    { name: 'KISA 상담센터', phone: '118', purpose: '스미싱·불법스팸·의심문자 상담/신고', priority: 2 },
+  ],
+  // 개인정보·신분증 노출
+  personalInfoExposed: [
+    { name: '금융감독원 개인정보노출자 사고예방시스템', url: 'pd.fss.or.kr', purpose: '노출 등록 → 신규 계좌·카드·대출 개설 차단', priority: 1 },
+    { name: '명의도용방지서비스 엠세이퍼', url: 'msafer.or.kr', purpose: '명의도용 휴대전화 개통 여부 확인', priority: 2 },
+  ],
+  // 악성앱 설치 의심
+  malwareInstalled: [
+    { name: '휴대전화 초기화 / 통신사 고객센터', purpose: '악성 앱 삭제, 단말 초기화', priority: 1 },
+    { name: '공동인증서·OTP 재발급', purpose: '탈취 대비 인증수단 폐기·재발급', priority: 2 },
+  ],
+};
+```
 
 - 송금 상황 문구는 "30분 골든타임"을 공식 문구로 박지 않고 **"즉시"**로 표현:
   > "송금했다면 시간이 가장 중요합니다. **즉시** 112·거래 금융회사·1332·1394에 연락해 지급정지와 피해상담을 요청하세요."
@@ -200,29 +187,29 @@
 
 ```
 phishing-signal-mcp/
-├─ Dockerfile
-├─ package.json
-├─ package-lock.json
+├─ Dockerfile              # ★ PlayMCP in KC Git 빌드 필수
+├─ package.json            # Node 22 / npm, MCP SDK, 테스트/빌드 스크립트
+├─ package-lock.json       # npm ci 기반 재현 빌드
 ├─ tsconfig.json
-├─ SPEC.md
-├─ README.md
+├─ SPEC.md                 # 본 문서
+├─ README.md               # 공개 레포 소개/실행/점검 안내
 ├─ src/
-│  ├─ server.ts
+│  ├─ server.ts            # MCP 서버 부트스트랩(Streamable HTTP, stateless)
 │  ├─ tools/
 │  │  ├─ analyzePhishingRisk.ts
 │  │  └─ getReportChannels.ts
 │  ├─ engine/
-│  │  ├─ signals.ts
-│  │  ├─ score.ts
-│  │  ├─ signalSuppression.ts
-│  │  └─ mask.ts
+│  │  ├─ signals.ts        # 위험 신호 7종 탐지기(정규식/사전)
+│  │  ├─ score.ts          # 가중치 합산 → 구간 매핑
+│  │  ├─ signalSuppression.ts # 정상 문맥 과탐 억제
+│  │  └─ mask.ts           # 민감정보 마스킹
 │  ├─ data/
-│  │  ├─ reportChannels.ts
-│  │  ├─ scamScenarios.ts
-│  │  ├─ scamPatternLexicon.ts
-│  │  └─ sourceDiscovery.ts
+│  │  ├─ reportChannels.ts # §6 확정값
+│  │  ├─ scamScenarios.ts  # 공식/대표 시나리오 기반 탐지 데이터
+│  │  ├─ scamPatternLexicon.ts # 공통 피싱 문법/문맥 lexicon
+│  │  └─ sourceDiscovery.ts # 출처 검증 메모/데이터
 │  └─ format/
-│     └─ markdown.ts
+│     └─ markdown.ts       # 출력 포맷터(24k 가드 포함)
 └─ test/
    ├─ compliance.test.ts
    ├─ server.test.ts
@@ -230,18 +217,9 @@ phishing-signal-mcp/
    ├─ getReportChannels.test.ts
    ├─ score.test.ts
    ├─ signals.test.ts
-   ├─ scam*.test.ts
-   └─ fixtures/
+   ├─ signal/scenario/adversarial 회귀 테스트
+   └─ fixtures/             # 캘리브레이션/adversarial 합성 샘플
 ```
-
-주요 역할:
-
-- `src/server.ts`: Streamable HTTP / stateless MCP 서버.
-- `src/tools/`: MCP 툴 등록과 입력 스키마.
-- `src/engine/`: 탐지, 점수화, suppression, 마스킹.
-- `src/data/`: 신고 채널, 시나리오, lexicon, 출처 메타데이터.
-- `src/format/`: 마크다운 응답과 24k 가드.
-- `test/`: compliance, server, tool, engine, scenario 회귀 테스트.
 
 ## 10. 구현 / 검증 상태
 
