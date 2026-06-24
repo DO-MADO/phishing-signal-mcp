@@ -16,7 +16,7 @@
 
 
 
-<ins>응답은 다음 순서</ins>로 구성됩니다.
+<ins>위험 신호가 있는 응답</ins>은 다음 순서로 구성됩니다.
 
 1. 30초 안전 브레이크 : 링크 클릭, 앱 설치, 송금, 인증번호 공유 중단 안내
    
@@ -64,7 +64,7 @@
 
 - **정상 문자(낮음)** 는 과한 경고 없이 한두 줄로 차분히 안내하고,  <br> **위험 문자**는 `30초 안전 브레이크 → 위험도 → 지금 하지 말아야 할 행동 → 지금 해야 할 행동 → 왜 위험한가요? → 공식 신고 루트` 순으로 응답합니다.
 
-- `높음`/`매우 높음`에서는 가족에게 공유할 문구가 추가됩니다.
+- `높음`/`매우 높음`에서는 `왜 위험한가요?` 뒤에 가족에게 공유할 문구가 추가됩니다.
   
 - 같은 입력에는 항상 같은 근거·결과가 나오는 **결정적(deterministic) 판정**이라 검증·재현이 쉽습니다.
 
@@ -81,10 +81,11 @@
 ## 🚀 설치 / 빌드 / 실행
 
 ```bash
-node --version       # Node.js 버전 확인 (22 LTS 권장)
-npm ci               # package-lock.json 기준으로 의존성 설치
-npm run build        # TypeScript → dist/ 빌드
-npm start            # node dist/server.js 실행 (PORT 기본값: 3000)
+# 설치 / 빌드 / 서버 실행
+node --version       
+npm ci               
+npm run build        
+npm start            
 
 # 개발 모드
 npm run dev
@@ -120,9 +121,11 @@ PORT=3000 npm start
 npx @modelcontextprotocol/inspector
 
 # 2-B) CLI 모드(헤드리스)
-npx @modelcontextprotocol/inspector --cli http://127.0.0.1:3000/mcp --method tools/list
 npx @modelcontextprotocol/inspector --cli http://127.0.0.1:3000/mcp \
-  --method tools/call --tool-name getReportChannels \
+  --transport http --method tools/list
+
+npx @modelcontextprotocol/inspector --cli http://127.0.0.1:3000/mcp \
+  --transport http --method tools/call --tool-name getReportChannels \
   --tool-arg situation=suspiciousOnly
 ```
 
