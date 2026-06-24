@@ -131,7 +131,7 @@ export const SCAM_SCENARIOS: readonly ScamScenario[] = [
     reason: '가족 또는 지인을 사칭하면서 급한 사정을 이유로 송금·입금을 요구하는 패턴입니다.',
     patterns: {
       impersonation: [
-        /(엄마|아빠|어머니|아버지|아들|딸|자녀|오빠|누나|형|언니|친구|지인|민수야).{0,35}(나야|나다|폰\s*(?:고장|고장남|깨짐|깨졌|잃어버림|먹통|맛갔|침수|박살|물먹|벽돌|초기화)|휴대폰\s*(?:고장|고장남|깨짐|깨졌|안\s*돼|잃어버림|먹통|맛갔|침수|박살|물먹|벽돌|초기화)|핸드폰\s*(?:고장|고장남|깨짐|깨졌|안\s*돼|잃어버림|먹통|맛갔|침수|박살|물먹|벽돌|초기화)|액정\s*(?:깨짐|깨졌|박살)|화면\s*(?:안\s*보|나감)|계좌\s*(?:앱\s*)?(?:막힘|비활성|비활성됨)|카드\s*앱\s*(?:막힘|튕겨|오류)|페이\s*앱\s*(?:막힘|잠겨|잠김)|모바일\s*뱅킹\s*못함|번호\s*(?:바뀜|바뀌었|바꿨|변경)|카톡\s*(?:안\s*됨|안돼|못\s*씀|막힘)|채팅\s*앱\s*막힘|채팅앱\s*막힘|계정\s*잠김)/g,
+        /(엄마|아빠|어머니|아버지|아들|딸|자녀|동생|막내|조카|오빠|누나|형|언니|친구|지인|민수야).{0,35}(나야|나다|폰\s*(?:고장|고장남|깨짐|깨졌|잃어버림|먹통|맛갔|침수|박살|물먹|벽돌|초기화)|휴대폰\s*(?:고장|고장남|깨짐|깨졌|안\s*돼|잃어버림|먹통|맛갔|침수|박살|물먹|벽돌|초기화)|핸드폰\s*(?:고장|고장남|깨짐|깨졌|안\s*돼|잃어버림|먹통|맛갔|침수|박살|물먹|벽돌|초기화)|액정\s*(?:깨짐|깨졌|박살)|화면\s*(?:안\s*보|나감)|계좌\s*(?:앱\s*)?(?:막힘|비활성|비활성됨)|카드\s*앱\s*(?:막힘|튕겨|오류)|페이\s*앱\s*(?:막힘|잠겨|잠김)|모바일\s*뱅킹\s*못함|번호\s*(?:바뀜|바뀌었|바꿨|변경)|카톡\s*(?:안\s*됨|안돼|못\s*씀|막힘)|채팅\s*앱\s*막힘|채팅앱\s*막힘|계정\s*잠김)/g,
       ],
       urgency: [
         new RegExp(String.raw`(급해|급하게|급함|급한데|급한\s*일|급행|지금|바로|빨리|당장|큰일).{0,30}(도와\s*${CASUAL_REQUEST_ENDING}|처리|${MONEY_TRANSFER_ACTION}|돈\s*가능)`, 'g'),
@@ -140,12 +140,12 @@ export const SCAM_SCENARIOS: readonly ScamScenario[] = [
         new RegExp(String.raw`${FAMILY_MONEY_PURPOSE}.{0,30}${MONEY_REQUEST_ACTION}`, 'gi'),
         new RegExp(String.raw`${MONEY_TRANSFER_ACTION}.{0,30}${FAMILY_MONEY_PURPOSE}`, 'gi'),
         new RegExp(String.raw`계좌.{0,20}(${AMOUNT_PATTERN}).{0,20}${MONEY_TRANSFER_ACTION}`, 'gi'),
-        new RegExp(String.raw`(엄마|아빠|어머니|아버지|아들|딸|오빠|누나|형|언니|친구|지인).{0,60}(송금|입금|이체).{0,15}(가능|될까|해줄|부탁|도와)`, 'g'),
+        new RegExp(String.raw`(엄마|아빠|어머니|아버지|아들|딸|동생|막내|조카|오빠|누나|형|언니|친구|지인).{0,60}(송금|입금|이체).{0,15}(가능|될까|해줄|부탁|도와)`, 'g'),
         new RegExp(String.raw`${FAMILY_DEVICE_OR_PAYMENT_BLOCKER}.{0,25}${FAMILY_BLOCKED_STATE}.{0,45}${FAMILY_MONEY_PURPOSE}`, 'gi'),
-        new RegExp(String.raw`(엄마|아빠|어머니|아버지|아들|딸|오빠|누나|형|언니|친구|지인).{0,80}${FAMILY_DEVICE_OR_PAYMENT_BLOCKER}.{0,25}${FAMILY_BLOCKED_STATE}.{0,45}${MONEY_TRANSFER_ACTION}`, 'gi'),
-        new RegExp(String.raw`(엄마|아빠|어머니|아버지|아들|딸|오빠|누나|형|언니|친구|지인).{0,80}${FAMILY_MONEY_PURPOSE}\s*좀`, 'gi'),
-        new RegExp(String.raw`(엄마|아빠|어머니|아버지|아들|딸|오빠|누나|형|언니|친구|지인).{0,80}${FAMILY_DEVICE_OR_PAYMENT_BLOCKER}.{0,25}${FAMILY_BLOCKED_STATE}.{0,45}${FAMILY_MONEY_PURPOSE}`, 'gi'),
-        /(엄마|아빠|어머니|아버지|아들|딸|자녀|오빠|누나|형|언니|친구|지인).{0,20}(나야|나다|\s나\s).{0,20}(돈|비용|수리비|병원비|생활비|합의금)\s*좀[ㅠㅜ~!?.\s]*$/g,
+        new RegExp(String.raw`(엄마|아빠|어머니|아버지|아들|딸|동생|막내|조카|오빠|누나|형|언니|친구|지인).{0,80}${FAMILY_DEVICE_OR_PAYMENT_BLOCKER}.{0,25}${FAMILY_BLOCKED_STATE}.{0,45}${MONEY_TRANSFER_ACTION}`, 'gi'),
+        new RegExp(String.raw`(엄마|아빠|어머니|아버지|아들|딸|동생|막내|조카|오빠|누나|형|언니|친구|지인).{0,80}${FAMILY_MONEY_PURPOSE}\s*좀`, 'gi'),
+        new RegExp(String.raw`(엄마|아빠|어머니|아버지|아들|딸|동생|막내|조카|오빠|누나|형|언니|친구|지인).{0,80}${FAMILY_DEVICE_OR_PAYMENT_BLOCKER}.{0,25}${FAMILY_BLOCKED_STATE}.{0,45}${FAMILY_MONEY_PURPOSE}`, 'gi'),
+        /(엄마|아빠|어머니|아버지|아들|딸|자녀|동생|막내|조카|오빠|누나|형|언니|친구|지인).{0,20}(나야|나다|\s나\s).{0,20}(돈|비용|수리비|병원비|생활비|합의금)\s*좀[ㅠㅜ~!?.\s]*$/g,
       ],
     },
   },
