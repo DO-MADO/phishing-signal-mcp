@@ -1,4 +1,4 @@
-// MCP 서버 부트스트랩 (SPEC §3 / §9, CLAUDE §11)
+// MCP 서버 부트스트랩 (SPEC §3 / §9)
 // 전송: Streamable HTTP / Remote / Stateless(no session).
 //  - 세션 상태를 두지 않는다(sessionIdGenerator: undefined).
 //  - 요청마다 새 McpServer+Transport를 생성해 상태 누수를 막는다(공식 stateless 패턴).

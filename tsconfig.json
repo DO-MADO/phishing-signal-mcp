@@ -13,7 +13,7 @@
     "sourceMap": true,
     "declaration": false,
 
-    /* 엄격성 — 안전한 동작 우선(CLAUDE.md §1) */
+    /* 엄격성 — 안전한 동작 우선 */
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,

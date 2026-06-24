@@ -1,4 +1,4 @@
-// PlayMCP / Agentic Player 10 규정 자동 점검 (SPEC §4.3, CLAUDE §11)
+// PlayMCP / Agentic Player 10 규정 자동 점검 (SPEC §4.3)
 // MCP Inspector가 확인하는 항목 중 정적으로 검증 가능한 것들을 회귀 가드로 고정한다.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
