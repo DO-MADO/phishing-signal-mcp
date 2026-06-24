@@ -4,7 +4,7 @@
 **지금 해야 할 행동**과 **공식 신고 루트**를 안내하는 MCP 서버입니다.
 
 > 판정은 LLM 호출이 아니라 **결정적(deterministic) 규칙 엔진**으로 수행합니다(응답 100ms 목표·무과금·일관성).
-> 자세한 제품/규정/확정값은 [SPEC.md](SPEC.md), 작업 규율은 [CLAUDE.md](CLAUDE.md) 참고.
+> 자세한 제품/규정/확정값은 [SPEC.md](SPEC.md)를 참고하세요.
 
 ## 툴 (MVP 2종)
 
@@ -15,6 +15,7 @@
 
 - 전송: **Streamable HTTP / Remote / Stateless(no session)**
 - 안전: 입력 미저장, 민감정보 마스킹, 의심 링크 디팽, 모든 분석 출력에 디스클레이머, 응답 24k 가드
+- 품질: 공식 시나리오 기반 fixture와 adversarial 합성 샘플 회귀 테스트로 가족/지인 사칭, 기관 사칭, 대출·택배·소액결제·투자/알바·악성앱 유도 유형을 점검
 
 ## 요구 사항
 
@@ -87,3 +88,8 @@ curl http://127.0.0.1:3000/healthz
 1. 공개 Endpoint URL 확보 → 경로는 `https://<host>/mcp`.
 2. PlayMCP 개발자 콘솔에 임시 등록 → 도구함 추가 → AI채팅 테스트 → 심사 요청.
 3. 심사 통과 후 공개 상태를 "전체 공개"로 전환.
+
+## 레포 포함 기준
+
+- 포함: `src/`, `test/`, `README.md`, `SPEC.md`, `Dockerfile`, `package.json`, `package-lock.json`, `tsconfig.json`
+- 제외: 로컬 빌드 산출물(`dist/`), 설치 의존성(`node_modules/`), 로컬 에이전트 지침/QA 핸드오프 문서(`AGENTS.md`, `CLAUDE.md`, `docs/claudeCode*.md`)

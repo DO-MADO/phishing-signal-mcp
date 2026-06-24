@@ -4,6 +4,12 @@ node_modules/
 # Build output
 dist/
 
+# Local agent / QA handoff notes
+AGENTS.md
+CLAUDE.md
+docs/claudeCode*.md
+.code-review-graph/
+
 # Logs / env / OS
 *.log
 .env

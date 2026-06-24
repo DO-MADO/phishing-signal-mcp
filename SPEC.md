@@ -182,15 +182,16 @@ const REPORT_CHANNELS = {
 
 ---
 
-## 9. 디렉터리 구조 (예정)
+## 9. 디렉터리 구조 (현재)
 
 ```
 phishing-signal-mcp/
 ├─ Dockerfile              # ★ PlayMCP in KC Git 빌드 필수
-├─ package.json            # Node 22 / npm, SDK 명시(설치는 승인 후)
+├─ package.json            # Node 22 / npm, MCP SDK, 테스트/빌드 스크립트
+├─ package-lock.json       # npm ci 기반 재현 빌드
 ├─ tsconfig.json
 ├─ SPEC.md                 # 본 문서
-├─ CLAUDE.md               # Claude Code 프로젝트 지침
+├─ README.md               # 공개 레포 소개/실행/점검 안내
 ├─ src/
 │  ├─ server.ts            # MCP 서버 부트스트랩(Streamable HTTP, stateless)
 │  ├─ tools/
@@ -199,27 +200,45 @@ phishing-signal-mcp/
 │  ├─ engine/
 │  │  ├─ signals.ts        # 위험 신호 7종 탐지기(정규식/사전)
 │  │  ├─ score.ts          # 가중치 합산 → 구간 매핑
+│  │  ├─ signalSuppression.ts # 정상 문맥 과탐 억제
 │  │  └─ mask.ts           # 민감정보 마스킹
 │  ├─ data/
-│  │  └─ reportChannels.ts # §6 확정값
+│  │  ├─ reportChannels.ts # §6 확정값
+│  │  ├─ scamScenarios.ts  # 공식/대표 시나리오 기반 탐지 데이터
+│  │  ├─ scamPatternLexicon.ts # 공통 피싱 문법/문맥 lexicon
+│  │  └─ sourceDiscovery.ts # 출처 검증 메모/데이터
 │  └─ format/
 │     └─ markdown.ts       # 출력 포맷터(24k 가드 포함)
 └─ test/
+   ├─ compliance.test.ts
+   ├─ server.test.ts
+   ├─ analyzePhishingRisk.test.ts
+   ├─ getReportChannels.test.ts
    ├─ score.test.ts
    ├─ signals.test.ts
-   └─ mask.test.ts
+   ├─ signal/scenario/adversarial 회귀 테스트
+   └─ fixtures/             # 캘리브레이션/adversarial 합성 샘플
 ```
+
+로컬 작업용 파일(`AGENTS.md`, `CLAUDE.md`, `docs/claudeCode*.md`)과 생성물(`dist/`, `node_modules/`)은 공개 제출 커밋에 포함하지 않는다.
 
 ---
 
-## 10. 빌드 순서 (다음 작업)
+## 10. 구현 / 검증 상태
 
-1. `package.json`(SDK 명시) + `tsconfig.json` + `Dockerfile` 스캐폴딩 — **의존성 설치는 승인 후**
-2. `engine` (signals → score → mask) + 단위 테스트
-3. `tools/analyzePhishingRisk` (스키마 + annotations 5종 + 마크다운 출력)
-4. `tools/getReportChannels` (§6 확정값)
-5. `server.ts` (Streamable HTTP, stateless)
-6. 로컬 실행 + **MCP Inspector** 점검 명령
+완료:
+1. `package.json` + `package-lock.json` + `tsconfig.json` + `Dockerfile` 구성.
+2. `engine` 구현: 민감정보 마스킹 → 위험 신호 탐지 → 정상 문맥 suppression → 점수/구간 산정.
+3. `analyzePhishingRisk`: 입력 스키마, context-aware 보정, annotations 5종, 마크다운 출력.
+4. `getReportChannels`: §6 확정값 기반 상황별 공식 신고 채널 안내.
+5. `server.ts`: Streamable HTTP, Remote, stateless, `/mcp`, `/healthz`.
+6. 테스트: compliance/server/tool/engine/scenario/adversarial 회귀 테스트.
+
+검증 순서:
+1. `npm run typecheck`
+2. `npm test`
+3. `npm run build`
+4. 서버 기동 후 MCP Inspector에서 `http://127.0.0.1:3000/mcp` 연결 및 `tools/list`, `tools/call` 확인.
 
 ---
 
