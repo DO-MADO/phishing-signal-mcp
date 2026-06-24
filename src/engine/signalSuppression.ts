@@ -137,12 +137,42 @@ const SUPPRESSION_BYPASS_PATTERNS: SignalPatternMap = {
 const META_DESCRIPTIVE_CONTEXT =
   /(라고\s*(?:배웠|교육|들었|안내|알려|함|한다)|교육\s*받았|교육받았|예방\s*(?:교육|캠페인|글|자료|포스터)|캠페인에서|설명서에\s*(?:적|나)|문서에\s*(?:적|썼)|적혀\s*있|기사에서\s*(?:봤|읽)|뉴스에서\s*(?:봤|읽|다뤘|나왔)|뉴스로\s*(?:봤|읽)|사기라고|피싱이라고|피싱이라\s|수법이라고|수법이라\s|사례라고|사례로\s*(?:알려|배웠|읽|정리)|요구는\s*(?:사기|피싱|불법|부적절|범죄)|하지\s*말라고\s*(?:배웠|안내|교육|들었|한다)|(?:불법|범죄)이라(?:고|는)|같은\s*말이?\s*나오면|(?:확인|조심|주의|의심|예방)하라는)/;
 
-// round8 P0: 수신자에게 직접 향하는 "살아있는" 긍정 명령형 요청.
-// 인용형(…하라는/…하라고)과 부정형(…하지 마/…말라)은 제외하고,
-// 명령 토큰 뒤에 인용/예시 표지(…같은 말/…라는/…라고)가 붙으면 인용으로 보고 제외한다.
-// (예방 교육문 "송금해줘 같은 말이 나오면…"의 인용된 명령을 실제 요청으로 오인하지 않게.)
-const LIVE_IMPERATIVE_REQUEST =
-  /(?:보내\s*줘|보내\s*주세요|보내주세요|부쳐\s*줘|부쳐줘|쏴\s*줘|쏴줘|송금\s*(?:해\s*줘|해줘|해\s*주세요|부탁해|하세요)|입금\s*(?:해\s*줘|해줘|하세요|부탁해)|이체\s*(?:해\s*줘|해줘|하세요)|이체해|넣어\s*줘|넣어줘|땡겨\s*줘|땡겨줘|빌려\s*줘|빌려줘|대신\s*(?:내\s*줘|결제\s*해|처리\s*해)|불러\s*줘|불러줘|불러\s*주세요|읽어\s*줘|읽어줘|눌러\s*주세요|누르세요|허용\s*(?:해\s*줘|해줘|하세요|누르세요)|설치\s*(?:하세요|해\s*주세요|해주세요)|깔고\s*(?:허용|눌러)|옮기세요|부탁해|부탁\s*드려|부탁드립니다)(?!\s*(?:같은|라는|라고|식으로|식의|류의))/;
+// round8 P0 + round9 강화: 수신자에게 직접 향하는 "살아있는" 긍정 명령형 요청.
+// 화이트리스트가 아니라 "행동 동사 + 명령 어미"의 일반 탐지로 구성한다(명령형은 열린 집합).
+// 인용형(…하라는/…하라고/…요구는)·부정형(…하지 마/…말라)·명사화(…는/…건/…같은 말)는
+// 어미와 뒤따르는 표지로 제외한다. (교육문의 인용된 명령을 실제 요청으로 오인하지 않게.)
+//
+// 두 가지 강도로 나눈다:
+//  - BROAD: 임의의 직접 명령. META 게이트(clause1)에서 사용 — 공격이 인용 표지로 회피하는 것 차단.
+//  - RISK : 금전·인증·설치 등 위험 요청만. benign 억제 무력화(clause3)에서 사용 —
+//           정상 정보요청("한도 늘리는 법 알려줘")이 억제를 풀지 못하게 한다.
+const IMPERATIVE_ENDING = String.raw`(?:줘|주라|주세요|줄래|줄\s*수|세요|십시오|라|아라|어라|여라|해\s*줘|해줘|해라|해\s*주세요|하세요|하라|죠|좀|ㄱㄱ|드려|드립니다|부탁해|부탁\s*드려)`;
+const NOMINALIZER_GUARD = String.raw`(?!\s*(?:는|은|을|건|라는|라고|같은\s*말|식으로|식의|류의|문자|요구|달라|달라는|남겼|아껴))`;
+
+const LIVE_IMPERATIVE_BROAD = new RegExp(
+  String.raw`(?:` +
+    String.raw`(?:보내|부쳐|쏴|쏘|송금|입금|이체|넣어|땡겨|빌려|불러|알려|읽어|눌러|누르|허용|설치|깔아|받아|결제|처리|진행|찍어)\s*` +
+    IMPERATIVE_ENDING +
+    String.raw`|(?:입금|송금|이체|결제|충전|납부)\s*(?:좀|부탁)` +
+    String.raw`|돈\s*좀(?!\s*아껴)` +
+    // 어미 없이 절 경계에 오는 바닥어간 명령(BROAD 한정 — clause1은 억제를 건너뛸 뿐이라 과탐 위험 낮음)
+    String.raw`|(?:옮겨|불러|보내|넣어|쏴|쏘|읽어|눌러|깔아|부쳐)(?=\s|[!?.~ㄱ]|$)` +
+  String.raw`)` +
+  NOMINALIZER_GUARD,
+);
+
+const LIVE_RISK_REQUEST = new RegExp(
+  String.raw`(?:` +
+    // 금전 송금·인증 전달·악성앱 설치 등 위험 행동 동사만(일반 정보요청 알려/읽어/설명 제외)
+    String.raw`(?:보내|부쳐|쏴|쏘|송금|입금|이체|넣어|땡겨|빌려|불러|눌러|누르|허용|설치|깔아)\s*` +
+    IMPERATIVE_ENDING +
+    String.raw`|(?:입금|송금|이체|결제|충전|납부)\s*(?:좀|부탁)` +
+    String.raw`|돈\s*좀(?!\s*아껴)` +
+    // 명백한 송금 슬랭 바닥어간만(완료/명사형에 안 나타나 RISK에도 안전)
+    String.raw`|(?:옮겨|쏴|부쳐)(?=\s|[!?.~ㄱ]|$)` +
+  String.raw`)` +
+  NOMINALIZER_GUARD,
+);
 
 // 부수적인 정상 조각이 같은 메시지의 실제 요청을 덮어 끄지 못하게 보호할 신호(행동 신호).
 const REQUEST_OVERRIDABLE_SIGNALS: ReadonlySet<SignalId> = new Set<SignalId>([
@@ -153,19 +183,17 @@ const REQUEST_OVERRIDABLE_SIGNALS: ReadonlySet<SignalId> = new Set<SignalId>([
 ]);
 
 export function shouldSuppressSignal(signalId: SignalId, text: string): boolean {
-  const hasLiveRequest = LIVE_IMPERATIVE_REQUEST.test(text);
-
-  // 1) 메타 서술(교육/뉴스/예방/인용) 문맥이고 살아있는 명령형 요청이 없으면 bypass보다 우선해 항상 억제.
-  //    (명령형이 함께 있으면 회피 시도일 수 있으므로 억제하지 않고 아래 단계로 보낸다.)
-  if (!hasLiveRequest && META_DESCRIPTIVE_CONTEXT.test(text)) return true;
+  // 1) 메타 서술(교육/뉴스/예방/인용) 문맥이고 직접 명령형(광의)이 없으면 bypass보다 우선해 항상 억제.
+  //    (직접 명령형이 함께 있으면 회피 시도이므로 억제하지 않고 아래 단계로 보낸다.)
+  if (!LIVE_IMPERATIVE_BROAD.test(text) && META_DESCRIPTIVE_CONTEXT.test(text)) return true;
 
   // 2) 기존 bypass: 실제 공격 문맥을 복원한다.
   if ((SUPPRESSION_BYPASS_PATTERNS[signalId] ?? []).some((pattern) => pattern.test(text))) return false;
 
-  // 3) 정상 문맥 억제. 단, 같은 메시지에 살아있는 금전/인증/설치 요청이 있으면
+  // 3) 정상 문맥 억제. 단, 같은 메시지에 살아있는 금전/인증/설치 위험 요청(협의)이 있으면
   //    부수적 정상 조각(예: "병원비 영수증은 내가 챙길게")이 실제 요청을 덮어 끄지 못하게 한다.
   const benign = (BENIGN_CONTEXT_PATTERNS[signalId] ?? []).some((pattern) => pattern.test(text));
-  if (benign && hasLiveRequest && REQUEST_OVERRIDABLE_SIGNALS.has(signalId)) {
+  if (benign && REQUEST_OVERRIDABLE_SIGNALS.has(signalId) && LIVE_RISK_REQUEST.test(text)) {
     return false;
   }
   return benign;
