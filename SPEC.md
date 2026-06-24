@@ -67,6 +67,8 @@
     text: string;                      // 필수: 의심 문자/통화/메시지 내용 붙여넣기
     context?: {                        // 선택: 있으면 행동 가이드 정밀화
       channel?: 'phone' | 'sms' | 'kakao' | 'unknown';
+      senderKnown?: boolean;           // 선택: 기존 연락처/지인으로 확인된 상대인지
+      relationship?: 'family' | 'friend' | 'coworker' | 'merchant' | 'unknown';
       alreadySentMoney?: boolean;
       alreadyInstalledApp?: boolean;
       alreadySharedPersonalInfo?: boolean;

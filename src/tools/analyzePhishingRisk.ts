@@ -6,10 +6,15 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { maskSensitive } from '../engine/mask.js';
-import { detectSignals } from '../engine/signals.js';
+import { detectSignals, type DetectedSignal } from '../engine/signals.js';
 import { scoreSignals } from '../engine/score.js';
 import { REPORT_CHANNELS, type Situation } from '../data/reportChannels.js';
 import { formatRiskAnalysis } from '../format/markdown.js';
+import {
+  ACCOUNT_REQUEST_TARGET,
+  TRUSTED_ACCOUNT_PURPOSE,
+  TRUSTED_ACCOUNT_RELATIONSHIPS,
+} from '../data/scamPatternLexicon.js';
 
 export const ANALYZE_TOOL_NAME = 'analyzePhishingRisk';
 
@@ -29,6 +34,11 @@ export const analyzeInputShape = {
   context: z
     .object({
       channel: z.enum(['phone', 'sms', 'kakao', 'unknown']).optional().describe('수신 채널'),
+      senderKnown: z.boolean().optional().describe('보낸 사람이 기존 연락처/지인으로 확인됐는지'),
+      relationship: z
+        .enum(['family', 'friend', 'coworker', 'merchant', 'unknown'])
+        .optional()
+        .describe('보낸 사람과의 관계(계좌 요청 문맥 보정용)'),
       alreadySentMoney: z.boolean().optional().describe('이미 송금/이체했는지'),
       alreadyInstalledApp: z.boolean().optional().describe('상대가 안내한 앱을 설치했는지'),
       alreadySharedPersonalInfo: z.boolean().optional().describe('개인정보를 알려줬는지'),
@@ -56,11 +66,47 @@ function pickSituation(context: AnalyzePhishingRiskInput['context']): Situation 
   return 'suspiciousOnly';
 }
 
+const TRUSTED_ACCOUNT_RELATIONSHIP_SET = new Set<string>(TRUSTED_ACCOUNT_RELATIONSHIPS);
+const ACCOUNT_REQUEST_TARGET_PATTERN = new RegExp(ACCOUNT_REQUEST_TARGET, 'i');
+const TRUSTED_ACCOUNT_PURPOSE_PATTERN = new RegExp(TRUSTED_ACCOUNT_PURPOSE, 'i');
+const ACCOUNT_REQUEST_ACTION_PATTERN = /(알려|확인|보내|남겨|다시\s*알려|입금할게|송금할게|이체할게)/i;
+const HIGH_RISK_CONTEXT_SIGNAL_IDS = new Set(['impersonation', 'urgency', 'requestedAction', 'malwareApp', 'suspiciousLink']);
+
+function hasTrustedAccountContext(context: AnalyzePhishingRiskInput['context']): boolean {
+  if (!context) return false;
+  if (context.relationship && TRUSTED_ACCOUNT_RELATIONSHIP_SET.has(context.relationship)) return true;
+  return context.senderKnown === true;
+}
+
+function isAccountOnlySignal(signal: DetectedSignal): boolean {
+  return signal.id === 'personalInfo' && signal.matches.some((match) => ACCOUNT_REQUEST_TARGET_PATTERN.test(match));
+}
+
+function isTrustedAccountSettlementText(text: string): boolean {
+  return (
+    ACCOUNT_REQUEST_TARGET_PATTERN.test(text) &&
+    ACCOUNT_REQUEST_ACTION_PATTERN.test(text) &&
+    TRUSTED_ACCOUNT_PURPOSE_PATTERN.test(text)
+  );
+}
+
+function applyContextSignalAdjustments(
+  signals: readonly DetectedSignal[],
+  text: string,
+  context: AnalyzePhishingRiskInput['context'],
+): DetectedSignal[] {
+  if (!hasTrustedAccountContext(context)) return [...signals];
+  if (!isTrustedAccountSettlementText(text)) return [...signals];
+  if (signals.some((signal) => HIGH_RISK_CONTEXT_SIGNAL_IDS.has(signal.id))) return [...signals];
+
+  return signals.filter((signal) => !isAccountOnlySignal(signal));
+}
+
 /** 순수 분석 함수: 입력 → 정제된 마크다운(서버/SDK 비의존, 테스트 용이). */
 export function analyzePhishingRisk(input: AnalyzePhishingRiskInput): string {
   const raw = (input.text ?? '').slice(0, MAX_INPUT_CHARS);
   const masked = maskSensitive(raw); // §7: 처리 전 마스킹
-  const signals = detectSignals(masked);
+  const signals = applyContextSignalAdjustments(detectSignals(masked), masked, input.context);
   const score = scoreSignals(signals);
   const situation = pickSituation(input.context);
   return formatRiskAnalysis({

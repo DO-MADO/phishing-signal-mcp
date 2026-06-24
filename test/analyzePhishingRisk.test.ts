@@ -75,6 +75,26 @@ test('수신 채널에 따라 행동 가이드를 정밀화한다', () => {
   assert.notEqual(sms, kakao);
 });
 
+test('계좌 요청은 신뢰 관계 정산 context가 있을 때만 낮춘다', () => {
+  const settlement = '친구야 점심값 보내야 해서 계좌 알려줘';
+  const marketplace = '중고거래 구매자인데 계좌 알려주시면 입금하고 주소 드릴게요';
+  const smishing = '정부지원금 대상입니다. 링크에서 계좌 확인하세요';
+
+  assert.match(analyzePhishingRisk({ text: settlement }), /위험도: 높음/);
+  assert.match(
+    analyzePhishingRisk({ text: settlement, context: { senderKnown: true, relationship: 'friend' } }),
+    /위험도: 낮음/,
+  );
+  assert.match(
+    analyzePhishingRisk({ text: marketplace, context: { senderKnown: true, relationship: 'merchant' } }),
+    /위험도: 높음/,
+  );
+  assert.match(
+    analyzePhishingRisk({ text: smishing, context: { senderKnown: true, relationship: 'friend' } }),
+    /위험도: (높음|매우 높음)/,
+  );
+});
+
 test('응답은 24k 바이트 한도를 넘지 않는다', () => {
   const md = analyzePhishingRisk({ text: '송금 안전계좌 인증번호 '.repeat(5000) });
   assert.ok(Buffer.byteLength(md, 'utf8') <= MAX_RESPONSE_BYTES);
