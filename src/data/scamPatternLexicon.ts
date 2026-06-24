@@ -14,4 +14,6 @@ export const TRUSTED_ACCOUNT_RELATIONSHIPS = ['family', 'friend', 'coworker'] as
 
 export const CREDENTIAL_REQUEST_TARGET = String.raw`(?:인증\s*번호|인\s*증\s*번\s*호|인증\s*코드|인증코드|인증\s*문자|인증문자|OTP|오\s*티\s*피|ㅇ\s*ㅈ\s*ㅂ\s*ㅎ|승인\s*번호|승인\s*코드|승인코드|확인\s*번호|확인번호|확인\s*코드|확인코드|열람\s*코드|열람코드|보안\s*문자|보안문자|보안\s*코드|보안코드|보안\s*숫자|보안숫자|일회용\s*번호|일회용번호|ARS\s*인증|ARS|비밀\s*번호|비밀번호|비번|암호|공동\s*인증서|공동인증서|공인\s*인증서|공인인증서|인증서|보안\s*카드|카드\s*비번|잠금\s*번호|화면\s*잠금\s*번호|cvc|cvv)`;
 export const CREDENTIAL_DISCLOSURE_ACTION = String.raw`(?:불러|알려|말해|말씀|입력|전송|제출|공유|보내|읽어|읽어주|답장|회신|확인|누르|승인)`;
+export const UNAMBIGUOUS_CREDENTIAL_DISCLOSURE_ACTION = String.raw`(?:불러|알려|말해|말씀|전송|제출|공유|보내|읽어|읽어주|답장|회신)`;
+export const DUAL_USE_CREDENTIAL_ACTION = String.raw`(?:확인|입력|누르|승인)`;
 export const APP_PERMISSION_TERMS = String.raw`(?:알림\s*접근|알림접근|접근성\s*권한|접근성\s*허용|문자\s*읽기|문자읽기|권한\s*허용|권한|화면\s*잠금|화면잠금|화면\s*공유|화면공유|원격\s*지원|원격지원|원격\s*제어|원격제어)`;
