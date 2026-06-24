@@ -10,7 +10,7 @@
 
 <br>
 
-## 포지셔닝
+## 🧭 포지셔닝
 
 피싱 신호등은 단순 탐지기가 아니라, <br> 수상한 연락을 받았을 때 피해 행동 직전에 사용자를 멈춰 세우는 **30초 안전 브레이크**를 목표로 합니다.
 
@@ -34,7 +34,7 @@
 <br>
 
 
-## 툴 (MVP 2종)
+## 🛠️ 툴 (MVP 2종)
 
 | 이름 | 역할 |
 |---|---|
@@ -47,7 +47,7 @@
 
 <br>
 
-## 바로 해보기 (합성 데모 샘플)
+## 🧪 바로 해보기 (합성 데모 샘플)
 
 > 아래는 실제 번호·계좌·URL이 없는 **합성 예시**입니다. <br>  `analyzePhishingRisk`의 `text`에 그대로 붙여 넣어 결과를 비교해 보세요.
 
@@ -62,30 +62,31 @@
 | 고객님 상품이 배송 완료되었습니다. 자세한 내용은 공식 앱에서 확인하세요. | 🟢 낮음 |
 | OTP는 누구에게도 알려주면 안 된다고 교육받았어. | 🟢 낮음 |
 
-- **정상 문자(낮음)** 는 과한 경고 없이 한두 줄로 차분히 안내하고,  <br> **위험 문자**는 `30초 안전 브레이크 → 위험도 → 왜 위험한지 → 지금 할 행동 → 가족에게 공유할 문구` 순으로 응답합니다.
+- **정상 문자(낮음)** 는 과한 경고 없이 한두 줄로 차분히 안내하고,  <br> **위험 문자**는 `30초 안전 브레이크 → 위험도 → 지금 하지 말아야 할 행동 → 지금 해야 할 행동 → 왜 위험한가요? → 공식 신고 루트` 순으로 응답합니다.
+
+- `높음`/`매우 높음`에서는 가족에게 공유할 문구가 추가됩니다.
   
 - 같은 입력에는 항상 같은 근거·결과가 나오는 **결정적(deterministic) 판정**이라 검증·재현이 쉽습니다.
 
 <br>
 
-## 요구 사항
+## ⚙️ 요구 사항
 
 - **Node.js 22 LTS** (`engines: ">=22"`)
-  - 로컬에 Node 18/22가 혼재한 경우, Homebrew keg-only `node@22` 사용 예:
-    ```bash
-    export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
-    ```
+- **npm**
+
 
 <br>    
 
-## 설치 / 빌드 / 실행
+## 🚀 설치 / 빌드 / 실행
 
 ```bash
-npm install          # 의존성 설치(@modelcontextprotocol/sdk, zod)
-npm run build        # TypeScript → dist/
-npm start            # node dist/server.js (PORT, 기본 3000)
+node --version       # Node.js 버전 확인 (22 LTS 권장)
+npm ci               # package-lock.json 기준으로 의존성 설치
+npm run build        # TypeScript → dist/ 빌드
+npm start            # node dist/server.js 실행 (PORT 기본값: 3000)
 
-# 개발 모드(컴파일 없이 watch)
+# 개발 모드
 npm run dev
 
 # 타입체크 / 테스트
@@ -107,7 +108,7 @@ curl http://127.0.0.1:3000/healthz
 <br>
 
 
-## MCP Inspector 점검
+## 🔎 MCP Inspector 점검
 
 [MCP Inspector](https://github.com/modelcontextprotocol/inspector)로 스펙 준수를 확인합니다.
 
@@ -131,7 +132,7 @@ npx @modelcontextprotocol/inspector --cli http://127.0.0.1:3000/mcp \
 <br>
 
 
-## Docker (PlayMCP in KC — Git 소스 빌드)
+## 🐳 Docker (PlayMCP in KC — Git 소스 빌드)
 
 레포 루트의 [Dockerfile](Dockerfile)로 빌드합니다. (멀티스테이지, Node 22, 비루트 실행)
 
@@ -145,7 +146,7 @@ curl http://127.0.0.1:3000/healthz
 
 <br>
 
-## 배포 (PlayMCP 콘솔)
+## 📦 배포 (PlayMCP 콘솔)
 
 1. 공개 Endpoint URL 확보 → 경로는 `https://<host>/mcp`
 2. PlayMCP 개발자 콘솔에 임시 등록 → 도구함 추가 → AI채팅 테스트 → 심사 요청
