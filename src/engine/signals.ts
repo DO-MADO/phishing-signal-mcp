@@ -61,7 +61,7 @@ export const SIGNAL_DEFINITIONS: readonly SignalDefinition[] = [
     label: '금전 피해 가능성',
     description: '송금·안전계좌·대납·보증금 등 금전 요구',
     patterns: [
-      /(안전\s*계좌|대납|보증금|선입금|무통장|공탁금|벌금|예치금)/gi,
+      /(안전\s*계좌|대납|선입금|무통장|공탁금|벌금|예치금)/gi,
       /(핀\s*번호|PIN).{0,20}(보내|알려|전송|사진|캡처|찍어서)/gi,
       /(?:송금|입금|이체|납부)\s*(?:좀|해\s*(?:줘[요용욤여잉ㅇ~!?.ㅠㅜ]*|주라|줄래|주세요|주시|라|야)?|하세요|하라|해야|부탁|요청|바랍니다|필요|진행|처리)/gi,
       ...getScenarioPatterns('financialLoss'),
