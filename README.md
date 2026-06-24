@@ -21,10 +21,21 @@
 
 ## 툴 (MVP 2종)
 
-| 이름 | 역할 |
-|---|---|
-| `analyzePhishingRisk` | 입력 텍스트 → 30초 안전 브레이크 → 위험도(낮음/주의/높음/매우 높음) + 근거 + 행동 가이드 |
-| `getReportChannels` | 상황별 공식 신고 루트 (`suspiciousOnly`=의심만 받음, `alreadyPaid`=이미 송금, `personalInfoExposed`=개인정보 노출, `malwareInstalled`=악성앱 설치 의심) |
+**`analyzePhishingRisk`**
+
+- 입력 텍스트를 분석해 30초 안전 브레이크, 위험도, 근거, 행동 가이드를 반환합니다.
+- 위험도는 `낮음`, `주의`, `높음`, `매우 높음` 네 단계입니다.
+
+**`getReportChannels`**
+
+- 상황별 공식 신고 루트를 반환합니다.
+- 상황값:
+  - `suspiciousOnly`: 의심만 받음
+  - `alreadyPaid`: 이미 송금
+  - `personalInfoExposed`: 개인정보 노출
+  - `malwareInstalled`: 악성앱 설치 의심
+
+**공통 속성**
 
 - 전송: **Streamable HTTP / Remote / Stateless(no session)**
 - 안전: 입력 미저장, 민감정보 마스킹, 의심 링크 디팽, 모든 분석 출력에 디스클레이머, 응답 24k 가드
@@ -34,14 +45,23 @@
 
 > 아래는 실제 번호·계좌·URL이 없는 **합성 예시**입니다. `analyzePhishingRisk`의 `text`에 그대로 붙여 넣어 결과를 비교해 보세요.
 
-| 입력 예시 | 기대 위험도 |
-|---|---|
-| 서울중앙지검 수사관입니다. 지금 안전계좌로 송금하고 인증번호 알려주세요. | 🔴 매우 높음 |
-| 엄마 나 폰 깨져서 인증 안돼. 병원비 좀 보내줭 ㅠㅠ | 🟠 높음 |
-| 편의점에서 구글기프트 사서 뒷면 코드 긁어 사진 보내. | 🔴 매우 높음 |
-| [Web발신] CJ대한통운 주소 불일치 택배 보류. 아래에서 재입력. | 🟡 주의 |
-| 고객님 상품이 배송 완료되었습니다. 자세한 내용은 공식 앱에서 확인하세요. | 🟢 낮음 |
-| OTP는 누구에게도 알려주면 안 된다고 교육받았어. | 🟢 낮음 |
+**🔴 매우 높음**
+
+- `서울중앙지검 수사관입니다. 지금 안전계좌로 송금하고 인증번호 알려주세요.`
+- `편의점에서 구글기프트 사서 뒷면 코드 긁어 사진 보내.`
+
+**🟠 높음**
+
+- `엄마 나 폰 깨져서 인증 안돼. 병원비 좀 보내줭 ㅠㅠ`
+
+**🟡 주의**
+
+- `[Web발신] CJ대한통운 주소 불일치 택배 보류. 아래에서 재입력.`
+
+**🟢 낮음**
+
+- `고객님 상품이 배송 완료되었습니다. 자세한 내용은 공식 앱에서 확인하세요.`
+- `OTP는 누구에게도 알려주면 안 된다고 교육받았어.`
 
 - **정상 문자(낮음)** 는 과한 경고 없이 한두 줄로 차분히 안내하고, **위험 문자**는 `30초 안전 브레이크 → 위험도 → 왜 위험한지 → 지금 할 행동 → 가족에게 공유할 문구` 순으로 응답합니다.
 - 같은 입력에는 항상 같은 근거·결과가 나오는 **결정적(deterministic) 판정**이라 검증·재현이 쉽습니다.
@@ -87,12 +107,18 @@ curl http://127.0.0.1:3000/healthz
 # 1) 서버 기동
 PORT=3000 npm start
 
-# 2-A) UI 모드: 브라우저에서 Transport=Streamable HTTP, URL=http://127.0.0.1:3000/mcp 로 연결
+# 2-A) UI 모드
+# Transport=Streamable HTTP
+# URL=http://127.0.0.1:3000/mcp
 npx @modelcontextprotocol/inspector
 
 # 2-B) CLI 모드(헤드리스)
-npx @modelcontextprotocol/inspector --cli http://127.0.0.1:3000/mcp --method tools/list
-npx @modelcontextprotocol/inspector --cli http://127.0.0.1:3000/mcp \
+npx @modelcontextprotocol/inspector --cli \
+  http://127.0.0.1:3000/mcp \
+  --method tools/list
+
+npx @modelcontextprotocol/inspector --cli \
+  http://127.0.0.1:3000/mcp \
   --method tools/call --tool-name getReportChannels \
   --tool-arg situation=suspiciousOnly
 ```
