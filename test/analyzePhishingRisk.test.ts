@@ -124,3 +124,24 @@ test('신고 채널 데이터는 1394를 포함하고 구 번호(1566)는 없다
   assert.ok(all.includes('1394'), '1394 포함되어야 함');
   assert.ok(!all.includes('1566'), '구 대표번호(1566)는 제외되어야 함');
 });
+
+test('낮음 응답은 과한 경고 없이 차분하게 간소화한다(늑대소년 방지)', () => {
+  const md = analyzePhishingRisk({
+    text: '고객님 상품이 배송 완료되었습니다. 자세한 내용은 공식 앱에서 확인하세요.',
+  });
+  assert.match(md, /위험도: 낮음/);
+  assert.ok(md.includes(DISCLAIMER));
+  // 낮음에는 멈춤 배너·금지 목록·신고 루트를 띄우지 않는다.
+  assert.doesNotMatch(md, /30초 안전 브레이크/);
+  assert.doesNotMatch(md, /지금 하지 말아야 할 행동/);
+  assert.doesNotMatch(md, /공식 신고 루트/);
+  assert.doesNotMatch(md, /왜 위험한가요/);
+});
+
+test('높음 이상 응답은 멈춤 블록과 가족 공유 문구를 포함한다', () => {
+  const md = analyzePhishingRisk({
+    text: '금감원 조사라 계좌 비밀번호 확인이 필요합니다 말씀해주세요.',
+  });
+  assert.ok(md.startsWith('## 30초 안전 브레이크'));
+  assert.match(md, /가족에게 공유할 문구/);
+});

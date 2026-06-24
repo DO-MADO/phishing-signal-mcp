@@ -476,4 +476,12 @@ export const SCAM_ADVERSARIAL_SAMPLES: readonly ScamAdversarialSample[] = [
   { id: 'adv-benign-183', kind: 'benign', text: '원격제어 앱 설치 요구는 피싱 수법이라고 교육받았다', expectedLevel: '낮음' },
   { id: 'adv-benign-184', kind: 'benign', text: '대환대출 비교 글을 읽고 가계부에 정리했다', expectedLevel: '낮음' },
   { id: 'adv-benign-185', kind: 'benign', text: '형 회비는 내가 먼저 냈으니까 정산하자', expectedLevel: '낮음' },
+  // README 데모 샘플 회귀 가드(문장이 README와 동일해야 함)
+  { id: 'adv-attack-283', kind: 'attack', text: '서울중앙지검 수사관입니다. 지금 안전계좌로 송금하고 인증번호 알려주세요.', expectedLevel: '매우 높음' },
+  { id: 'adv-attack-284', kind: 'attack', text: '엄마 나 폰 깨져서 인증 안돼. 병원비 좀 보내줭 ㅠㅠ', expectedLevel: '높음' },
+  { id: 'adv-attack-285', kind: 'attack', text: '편의점에서 구글기프트 사서 뒷면 코드 긁어 사진 보내.', expectedLevel: '매우 높음' },
+  { id: 'adv-attack-286', kind: 'attack', text: '[Web발신] CJ대한통운 주소 불일치 택배 보류. 아래에서 재입력.', expectedLevel: '주의' },
+  // 정상 배송 완료 알림 과탐 방지(스미싱은 미배달/보류/링크로 탐지됨)
+  { id: 'adv-benign-186', kind: 'benign', text: '고객님 상품이 배송 완료되었습니다. 자세한 내용은 공식 앱에서 확인하세요.', expectedLevel: '낮음' },
+  { id: 'adv-benign-187', kind: 'benign', text: 'OTP는 누구에게도 알려주면 안 된다고 교육받았어.', expectedLevel: '낮음' },
 ];

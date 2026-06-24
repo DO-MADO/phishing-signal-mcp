@@ -100,7 +100,7 @@ export function renderChannels(channels: readonly ReportChannel[]): string {
 }
 
 const EVIDENCE_PATTERNS: Record<SignalId, RegExp> = {
-  impersonation: /(검찰|경찰|금감원|법원|정부|은행|택배|카드사|엄마|아빠|아들|딸|친구|지인|폰\s*고장|번호\s*변경|카톡\s*안\s*됨)/gi,
+  impersonation: /(검찰|중앙\s*지검|지검|수사관|경찰|금감원|국세청|세무서|주민센터|법원|정부|은행|택배|카드사|엄마|아빠|아들|딸|친구|지인|폰\s*고장|번호\s*변경|카톡\s*안\s*됨)/gi,
   requestedAction: /(인증번호|승인번호|OTP|보안카드|원격제어|화면\s*공유|상품권|PIN|핀번호|사진|캡처)/gi,
   urgency: /(급해|급하게|급함|급한데|급행|즉시|지금|바로|빨리|당장|긴급|구속|체포|압류|동결|협박)/gi,
   financialLoss: /(돈\s*좀|돈|송금|입금\s*좀|입금|이체|납부|보내\s*줘[요용욤여잉ㅇ~!?.ㅠㅜ]*|보내\s*줭|보내\s*죵|보내\s*주라|빌려\s*줘[요용욤여잉ㅇ~!?.ㅠㅜ]*|빌려\s*줄래|수리비|병원비|합의금|상품권|PIN|안전\s*계좌)/gi,
@@ -109,14 +109,25 @@ const EVIDENCE_PATTERNS: Record<SignalId, RegExp> = {
   suspiciousLink: /(\[?\s*web\s*발신\s*\]?|국제\s*발신|국외\s*발신|https?:\/\/\S+|bit\.ly|tinyurl\.com|t\.co|goo\.gl|링크|URL|url)/gi,
 };
 
-function compactEvidence(signalId: SignalId, match: string): string {
-  const safe = defang(match).replace(/\s+/g, ' ').trim();
-  const tokens = [...safe.matchAll(EVIDENCE_PATTERNS[signalId])]
-    .map(([token]) => token.trim())
-    .filter(Boolean);
-  const unique = [...new Set(tokens)];
-  if (unique.length > 0) return unique.slice(0, 4).join(', ');
-  return safe.length > 24 ? `${safe.slice(0, 24)}…` : safe;
+// 한 신호의 모든 매칭을 모아 핵심 키워드만 전역 중복 제거(첫 등장 순서 보존)한다.
+// 키워드가 없으면 첫 매칭의 짧은 스니펫만 보여 원문 과노출과 기계적 반복을 막는다.
+function summarizeSignalEvidence(signalId: SignalId, matches: readonly string[]): string {
+  const re = EVIDENCE_PATTERNS[signalId];
+  const seen = new Set<string>();
+  const tokens: string[] = [];
+  for (const m of matches) {
+    const safe = defang(m).replace(/\s+/g, ' ').trim();
+    for (const [token] of safe.matchAll(re)) {
+      const t = token.trim();
+      if (t && !seen.has(t)) {
+        seen.add(t);
+        tokens.push(t);
+      }
+    }
+  }
+  if (tokens.length > 0) return tokens.slice(0, 4).join(', ');
+  const first = defang(matches[0] ?? '').replace(/\s+/g, ' ').trim();
+  return first.length > 20 ? `${first.slice(0, 20)}…` : first;
 }
 
 const DONT_DO: Record<Situation, string[]> = {
@@ -177,6 +188,17 @@ export interface RiskAnalysisView {
 /** analyzePhishingRisk 결과를 정제된 마크다운으로 포맷(24k 가드 포함). */
 export function formatRiskAnalysis(view: RiskAnalysisView): string {
   const lines: string[] = [];
+
+  // 낮음: 정상 문맥에 과한 경고(늑대소년)를 띄우지 않도록 차분하게 간소화한다.
+  if (view.level === '낮음') {
+    lines.push(`## ${RISK_HEADLINE[view.level]}`);
+    lines.push('\n- 현재 입력에서는 송금·앱 설치·인증번호 요구·의심 링크 같은 뚜렷한 위험 신호가 확인되지 않았습니다.');
+    lines.push('- 다만 대화가 이어지며 링크 클릭·앱 설치·송금·인증번호 공유를 요구하면, 그때 멈추고 공식 번호로 직접 확인하세요.');
+    lines.push(`\n> ⚠️ ${SENSITIVE_INPUT_WARNING}`);
+    lines.push(`\n> ${DISCLAIMER}`);
+    return clampToByteLimit(lines.join('\n'));
+  }
+
   lines.push('## 30초 안전 브레이크');
   for (const item of EMERGENCY_STOP[view.level]) lines.push(`- ${item}`);
 
@@ -199,10 +221,7 @@ export function formatRiskAnalysis(view: RiskAnalysisView): string {
     lines.push('- 입력에서 뚜렷한 위험 신호를 찾지 못했습니다.');
   } else {
     for (const s of view.signals) {
-      const evidence = s.matches
-        .slice(0, 5)
-        .map((m) => compactEvidence(s.id, m))
-        .join(', ');
+      const evidence = summarizeSignalEvidence(s.id, s.matches);
       lines.push(`- **${s.label}**: ${SIGNAL_EXPLANATIONS[s.id]} 근거: ${evidence}`);
     }
   }
