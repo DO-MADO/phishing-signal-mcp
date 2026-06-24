@@ -1,6 +1,9 @@
 import type { SignalId } from './signals.js';
 import {
   ACCOUNT_REQUEST_TARGET,
+  APP_PERMISSION_TERMS,
+  CREDENTIAL_DISCLOSURE_ACTION,
+  CREDENTIAL_REQUEST_TARGET,
   TRUSTED_ACCOUNT_PURPOSE,
 } from '../data/scamPatternLexicon.js';
 
@@ -100,6 +103,8 @@ const BENIGN_CONTEXT_PATTERNS: SignalPatternMap = {
     /(계좌).{0,45}(빌려주면|대여하면).{0,45}(범죄|캠페인|불법|위험)/i,
     /(계좌\s*대여|계좌대여).{0,55}(범죄|예방|캠페인|불법|위험)/i,
     /(범죄|예방|캠페인|불법|위험).{0,55}(계좌\s*대여|계좌대여)/i,
+    /(계좌|잔액|잔고).{0,45}(은행\s*앱|앱에서|직접).{0,20}(확인했|확인했다|확인했어)/i,
+    /(은행\s*앱|앱에서|직접).{0,20}(확인했|확인했다|확인했어).{0,45}(계좌|잔액|잔고)/i,
     // round10: "통장/계좌로 (돈) 보냈/이체했다" = 본인의 정상 송금(계좌 탈취 아님). 사본/번호 전송은 미해당.
     /(통장|계좌)\s*(?:으로|로)\s*(?:[0-9가-힣\s]{0,12})?(보냈|보내줬|보내드|이체했|송금했|넣었)/i,
     new RegExp(String.raw`(아빠|엄마|부모님|동생|형|누나|언니|오빠).{0,45}${ACCOUNT_REQUEST_TARGET}.{0,45}(용돈|등록금|보낼|보내드리|보내려고)`, 'i'),
@@ -239,6 +244,29 @@ const LIVE_RISK_REQUEST = new RegExp(
   NOMINALIZER_GUARD,
 );
 
+const LIVE_CREDENTIAL_REQUEST = new RegExp(
+  String.raw`(?:` +
+    String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,35}${CREDENTIAL_DISCLOSURE_ACTION}\s*(?:${IMPERATIVE_ENDING})?` +
+    String.raw`|${CREDENTIAL_DISCLOSURE_ACTION}\s*(?:${IMPERATIVE_ENDING})?.{0,35}${CREDENTIAL_REQUEST_TARGET}` +
+    String.raw`|${APP_PERMISSION_TERMS}.{0,35}(?:허용|켜|설치|진행|확인)\s*(?:${IMPERATIVE_ENDING})?` +
+  String.raw`)` +
+  NOMINALIZER_GUARD,
+  'i',
+);
+
+const CREDENTIAL_SELF_HELP_CONTEXT = new RegExp(
+  String.raw`(?:` +
+    String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,45}(?:변경|재발급|초기화|찾는|찾기|까먹|분실).{0,25}(?:방법|문서|절차|설명|알려)` +
+    String.raw`|(?:방법|문서|절차|설명|알려).{0,25}${CREDENTIAL_REQUEST_TARGET}.{0,45}(?:변경|재발급|초기화|찾는|찾기|까먹|분실)` +
+    String.raw`|${CREDENTIAL_REQUEST_TARGET}.{0,30}(?:입력해서|입력하고|입력한\s*뒤).{0,25}(?:가입|로그인|본인\s*로그인).{0,20}(?:완료|했|함)` +
+    String.raw`|${CREDENTIAL_REQUEST_TARGET}.{0,60}(?:절대|안\s*된|안\s*된다|하지\s*마|말라|알려주면\s*안|알려주지|공유하지|남에게|타인에게|누구에게도|가족에게도|요구하면|피싱일\s*수|배웠|교육|본인\s*휴대폰|회신\s*금지|금지\s*문구|문구|배너)` +
+    String.raw`|(?:절대|안\s*된|안\s*된다|하지\s*마|말라|알려주면\s*안|알려주지|공유하지|남에게|타인에게|누구에게도|가족에게도|요구하면|피싱일\s*수|배웠|교육|본인\s*휴대폰|회신\s*금지|금지\s*문구|문구|배너).{0,60}${CREDENTIAL_REQUEST_TARGET}` +
+    String.raw`|${APP_PERMISSION_TERMS}.{0,60}(?:필요한\s*앱에만|민감하니|허용하지|하지\s*말|말자|끄|해제|불필요|최소화|위험|교육)` +
+    String.raw`|(?:필요한\s*앱에만|민감하니|허용하지|하지\s*말|말자|끄|해제|불필요|최소화|위험|교육).{0,60}${APP_PERMISSION_TERMS}` +
+  String.raw`)`,
+  'i',
+);
+
 // 부수적인 정상 조각이 같은 메시지의 실제 요청을 덮어 끄지 못하게 보호할 신호(행동 신호).
 const REQUEST_OVERRIDABLE_SIGNALS: ReadonlySet<SignalId> = new Set<SignalId>([
   'financialLoss',
@@ -262,7 +290,12 @@ export function shouldSuppressSignal(signalId: SignalId, text: string): boolean 
   // 4) 정상 문맥 억제. 단, 같은 메시지에 살아있는 금전/인증/설치 위험 요청(협의)이 있으면
   //    부수적 정상 조각(예: "병원비 영수증은 내가 챙길게")이 실제 요청을 덮어 끄지 못하게 한다.
   const benign = (BENIGN_CONTEXT_PATTERNS[signalId] ?? []).some((pattern) => pattern.test(text));
-  if (benign && REQUEST_OVERRIDABLE_SIGNALS.has(signalId) && LIVE_RISK_REQUEST.test(text)) {
+  if (
+    benign &&
+    REQUEST_OVERRIDABLE_SIGNALS.has(signalId) &&
+    !CREDENTIAL_SELF_HELP_CONTEXT.test(text) &&
+    (LIVE_RISK_REQUEST.test(text) || LIVE_CREDENTIAL_REQUEST.test(text))
+  ) {
     return false;
   }
   return benign;
