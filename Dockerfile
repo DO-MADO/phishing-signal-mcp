@@ -1,5 +1,5 @@
 # Dockerfile — phishing-signal-mcp
-# PlayMCP in KC Git 소스 빌드 필수 조건(SPEC §1, CLAUDE.md §11): 레포 루트에 항상 유지.
+# PlayMCP in KC Git 소스 빌드 필수 조건(SPEC §1): 레포 루트에 항상 유지.
 # 멀티스테이지: build(TS 컴파일) → runtime(prod 의존성만, non-root 실행).
 
 # ---- Build stage ----
