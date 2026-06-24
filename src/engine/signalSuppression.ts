@@ -30,6 +30,7 @@ const BENIGN_CONTEXT_PATTERNS: SignalPatternMap = {
     /(공식\s*(?:앱|사이트|홈페이지)|앱에서|직접|방문|찾아왔|조회|확인|접수|완료|무시|삭제|안\s*눌렀).{0,65}(우체국|법원|건강보험|건보|주민센터|통신사|관세청|홈택스|복지로|정부지원금|지원금|소액\s*결제|소액결제|통관|등기|환급|택배)/,
     /(친구|가족|지인).{0,35}(폰|휴대폰|핸드폰).{0,20}(고장|깨짐|먹통).{0,45}(서비스센터|수리|맡긴|고쳤|후\s*연락)/,
     /(경찰\s*접수|보험사|합의\s*절차).{0,45}(상담|문의|절차)/,
+    new RegExp(String.raw`${APP_PERMISSION_TERMS}.{0,70}(필요한\s*앱에만|필요한\s*것만|민감하니|허용하지|하지\s*말|말자|켜라고|끄|꺼져|해제|불필요|필요\s*없|최소화|위험|교육).{0,50}(보안\s*팀|보안팀|IT팀).{0,25}(안내|교육|공지|알려)`, 'i'),
   ],
   requestedAction: [
     /(OTP|오\s*티\s*피|인증\s*번호|인\s*증\s*번\s*호|인증\s*문자|인증문자|ARS\s*인증|ARS|승인\s*번호|PIN|핀\s*번호|번호|코드|비밀\s*번호|비밀번호|보안\s*카드|체크카드|틴캐시|원격\s*지원|원격지원|검사\s*프로그램|보안\s*(?:앱|어플|프로그램|패치)|보안패치|앱\s*설치|어플\s*설치|파일\s*실행|권한|접근성\s*권한|외부\s*앱|외부앱|상담\s*앱|상담앱|화면\s*잠금|화면잠금).{0,55}(절대|안\s*된|안\s*된다|하지\s*마|말라|알려주지|알려주면\s*안|알려주지\s*않|공유하지|남에게|타인에게|요구하면|피싱일 수|배웠|교육|내부\s*게시판|사내|IT팀|예약|로그인\s*(?:완료|했|함|중|하고)|재발급|하는\s*법|방법|문서|설명서|설정\s*방법|오류|완료|알림|가입\s*완료|필요한\s*앱에만|해야\s*한다|위험하니|끄는\s*게|도움말|절차|기능)/i,
@@ -216,7 +217,9 @@ const META_DESCRIPTIVE_CONTEXT =
 //  - BROAD: 임의의 직접 명령. META 게이트(clause1)에서 사용 — 공격이 인용 표지로 회피하는 것 차단.
 //  - RISK : 금전·인증·설치 등 위험 요청만. benign 억제 무력화(clause3)에서 사용 —
 //           정상 정보요청("한도 늘리는 법 알려줘")이 억제를 풀지 못하게 한다.
-const IMPERATIVE_ENDING = String.raw`(?:줘|주라|주세요|줄래|줄\s*수|세요|십시오|라|아라|어라|여라|해\s*줘|해줘|해라|해\s*주세요|하세요|하라|죠|좀|ㄱㄱ|드려|드립니다|부탁해|부탁\s*드려)`;
+const IMPERATIVE_ENDING = String.raw`(?:줘|주라|주세요|줄래|줄\s*수|세요|십시오|라(?!고)|아라|어라|여라|해\s*줘|해줘|해라|해\s*주세요|하세요|하라|죠|좀|ㄱㄱ|드려|드립니다|부탁해|부탁\s*드려)`;
+const FORMAL_REQUEST_ENDING = String.raw`(?:바랍니다|주시기\s*바랍니다|주시면\s*됩니다|주시면|주시겠어요|주실래요|주셔야(?:\s*합니다)?|하셔야(?:\s*합니다)?|하시면|필요합니다|부탁합니다|해야\s*합니다|됩니다)`;
+const CREDENTIAL_REQUEST_ENDING = String.raw`(?:${IMPERATIVE_ENDING}|${FORMAL_REQUEST_ENDING})`;
 const NOMINALIZER_GUARD = String.raw`(?!\s*(?:는|은|을|건|라는|라고|같은\s*말|식으로|식의|류의|문자|요구|달라|달라는|남겼|아껴|려(?:고|구)|려고|리려(?:고|구)|리려고))`;
 
 const LIVE_IMPERATIVE_BROAD = new RegExp(
@@ -256,9 +259,9 @@ const LIVE_CREDENTIAL_REQUEST = new RegExp(
 
 const LIVE_CREDENTIAL_IMPERATIVE = new RegExp(
   String.raw`(?:` +
-    String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,35}${CREDENTIAL_DISCLOSURE_ACTION}\s*${IMPERATIVE_ENDING}` +
-    String.raw`|${CREDENTIAL_DISCLOSURE_ACTION}\s*${IMPERATIVE_ENDING}.{0,35}${CREDENTIAL_REQUEST_TARGET}` +
-    String.raw`|${APP_PERMISSION_TERMS}.{0,35}(?:허용(?!하지)|켜(?!져|진)|설치|진행)\s*${IMPERATIVE_ENDING}` +
+    String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,35}${CREDENTIAL_DISCLOSURE_ACTION}\s*(?:해\s*)?${CREDENTIAL_REQUEST_ENDING}` +
+    String.raw`|${CREDENTIAL_DISCLOSURE_ACTION}\s*(?:해\s*)?${CREDENTIAL_REQUEST_ENDING}.{0,35}${CREDENTIAL_REQUEST_TARGET}` +
+    String.raw`|${APP_PERMISSION_TERMS}.{0,35}(?:허용(?!하지)|켜(?!져|진)|설치|진행)\s*(?:해\s*)?${CREDENTIAL_REQUEST_ENDING}` +
   String.raw`)` +
   NOMINALIZER_GUARD,
   'i',
@@ -268,7 +271,7 @@ const CREDENTIAL_SELF_HELP_CONTEXT = new RegExp(
   String.raw`(?:` +
     String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,45}(?:변경|재발급|초기화|찾는|찾기|까먹|분실).{0,25}(?:방법|문서|절차|설명|알려)` +
     String.raw`|(?:방법|문서|절차|설명|알려).{0,25}${CREDENTIAL_REQUEST_TARGET}.{0,45}(?:변경|재발급|초기화|찾는|찾기|까먹|분실)` +
-    String.raw`|${CREDENTIAL_REQUEST_TARGET}.{0,30}(?:입력해서|입력하고|입력한\s*뒤|받아서|받고|마치고).{0,35}(?:가입|로그인|본인\s*로그인|본인\s*확인|본인확인).{0,20}(?:완료|했|함|가입)` +
+    String.raw`|${CREDENTIAL_REQUEST_TARGET}.{0,30}(?:입력해서|입력하고|입력한\s*뒤|받아서|받고|마치고).{0,35}(?:가입|로그인|본인\s*로그인|본인\s*확인|본인확인|카드\s*등록|카드등록|등록).{0,20}(?:완료|했|함|가입|등록)` +
     String.raw`|${CREDENTIAL_REQUEST_TARGET}.{0,70}(?:절대|안\s*된|안\s*된다|하지\s*마|말라|알려주면\s*안|알려주지|알려달라는|공유하지|남에게|타인에게|누구에게도|가족에게도|요구하면|피싱일\s*수|배웠|교육|본인\s*휴대폰|회신\s*금지|금지\s*문구|문구|배너|무시|삭제|차단|신고)` +
     String.raw`|(?:절대|안\s*된|안\s*된다|하지\s*마|말라|알려주면\s*안|알려주지|알려달라는|공유하지|남에게|타인에게|누구에게도|가족에게도|요구하면|피싱일\s*수|배웠|교육|본인\s*휴대폰|회신\s*금지|금지\s*문구|문구|배너|무시|삭제|차단|신고).{0,70}${CREDENTIAL_REQUEST_TARGET}` +
     String.raw`|${CREDENTIAL_REQUEST_TARGET}.{0,70}(?:입력\s*화면|확인하는\s*법|확인\s*방법).{0,35}(?:배웠|교육|문서|설명)` +
@@ -279,7 +282,12 @@ const CREDENTIAL_SELF_HELP_CONTEXT = new RegExp(
 );
 
 const CREDENTIAL_SELF_HELP_INFORMATION_REQUEST = new RegExp(
-  String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,45}(?:변경|재발급|초기화|찾는|찾기|까먹|분실).{0,25}(?:방법|문서|절차|설명)\s*(?:알려|설명)\s*${IMPERATIVE_ENDING}`,
+  String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,45}(?:변경|재발급|초기화|찾는|찾기|까먹|분실).{0,25}(?:방법|문서|절차|설명)\s*(?:좀|그냥|혹시)?\s*(?:알려|설명)\s*${CREDENTIAL_REQUEST_ENDING}`,
+  'i',
+);
+
+const MIXED_SELF_HELP_WITH_DISCLOSURE_REQUEST = new RegExp(
+  String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,45}(?:변경|재발급|초기화|찾는|찾기|까먹|분실).{0,25}(?:방법|문서|절차|설명)\s*(?:좀|그냥|혹시)?\s*(?:알려|설명)\s*${CREDENTIAL_REQUEST_ENDING}.{0,100}${CREDENTIAL_REQUEST_TARGET}.{0,35}${CREDENTIAL_DISCLOSURE_ACTION}\s*(?:해\s*)?${CREDENTIAL_REQUEST_ENDING}`,
   'i',
 );
 
@@ -304,10 +312,12 @@ export function shouldSuppressSignal(signalId: SignalId, text: string): boolean 
 
   const credentialSelfHelp = CREDENTIAL_SELF_HELP_CONTEXT.test(text);
   const liveCredentialImperative = LIVE_CREDENTIAL_IMPERATIVE.test(text);
+  const selfHelpInformationRequest = CREDENTIAL_SELF_HELP_INFORMATION_REQUEST.test(text);
+  const mixedSelfHelpWithDisclosureRequest = MIXED_SELF_HELP_WITH_DISCLOSURE_REQUEST.test(text);
   if (
     CREDENTIAL_SELF_HELP_SIGNALS.has(signalId) &&
     credentialSelfHelp &&
-    (!liveCredentialImperative || CREDENTIAL_SELF_HELP_INFORMATION_REQUEST.test(text))
+    (!liveCredentialImperative || (selfHelpInformationRequest && !mixedSelfHelpWithDisclosureRequest))
   ) {
     return true;
   }
