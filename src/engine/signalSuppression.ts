@@ -113,6 +113,7 @@ const BENIGN_CONTEXT_PATTERNS: SignalPatternMap = {
     new RegExp(String.raw`(아빠|엄마|부모님|동생|형|누나|언니|오빠).{0,45}${ACCOUNT_REQUEST_TARGET}.{0,45}(용돈|등록금|보낼|보내드리|보내려고)`, 'i'),
     new RegExp(String.raw`(회비|정산).{0,45}${ACCOUNT_REQUEST_TARGET}.{0,35}(다시\s*알려|알려줘|확인)`, 'i'),
     new RegExp(String.raw`(월세|집주인).{0,45}${ACCOUNT_REQUEST_TARGET}.{0,35}(확인\s*중|확인했다|보내야)`, 'i'),
+    new RegExp(String.raw`${ACCOUNT_REQUEST_TARGET}.{0,35}(확인하고|확인했|확인했다).{0,45}(월세|집주인|자동\s*이체|자동이체).{0,35}(등록|설정|완료|했|했어)`, 'i'),
     new RegExp(String.raw`(등록금|학교\s*포털|포털).{0,45}${ACCOUNT_REQUEST_TARGET}.{0,35}(확인|조회)`, 'i'),
   ],
   malwareApp: [
@@ -291,7 +292,7 @@ const CREDENTIAL_SELF_HELP_CONTEXT = new RegExp(
 );
 
 const CREDENTIAL_SELF_HELP_COMPLETION = new RegExp(
-  String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,30}(?:입력해서|입력하고|입력한\s*뒤|받아서|받고|인증\s*받고|인증받고|마치고).{0,35}(?:가입|로그인|본인\s*로그인|본인\s*확인|본인확인|카드\s*등록|카드등록|등록|이체).{0,20}(?:완료|했|함|가입|등록)`,
+  String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,30}(?:입력해서|입력하고|입력한\s*뒤|받아서|받고|인증\s*받고|인증받고|확인하고|확인한\s*뒤|마치고).{0,35}(?:가입|로그인|본인\s*로그인|본인\s*확인|본인확인|카드\s*등록|카드등록|등록|이체|결제).{0,20}(?:완료|했|함|가입|등록|끝냈)`,
   'i',
 );
 
@@ -302,8 +303,8 @@ const CREDENTIAL_SELF_HELP_SAFETY_INFORMATION = new RegExp(
 
 const CREDENTIAL_SELF_CHECK_CONTEXT = new RegExp(
   String.raw`(?:` +
-    String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,45}(?:내가|직접|맞는지|어디|뒀는지|잘\s*있는지|있는지|기억나는지|나오는지|되는지|변경하려고|확인하려고|확인하고|확인만|본인\s*확인|본인확인).{0,35}(?:확인했|확인해봤|확인해봐|확인해보고|확인하려고|확인만\s*했|입력해봤|결제\s*끝냈|끝냈|설정|나왔|싶어|봤어)` +
-    String.raw`|(?:내가|직접|맞는지|어디|뒀는지|잘\s*있는지|있는지|기억나는지|나오는지|되는지|변경하려고|확인하려고|확인하고|확인만|본인\s*확인|본인확인).{0,45}${CREDENTIAL_REQUEST_TARGET}.{0,35}(?:확인했|확인해봤|확인해봐|확인해보고|확인하려고|확인만\s*했|입력해봤|결제\s*끝냈|끝냈|설정|나왔|싶어|봤어)` +
+    String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,45}(?:내가|직접|맞는지|어디|뒀는지|잘\s*있는지|있는지|기억나는지|나오는지|되는지|변경하려고|확인하려고|확인하고|확인만|본인\s*확인|본인확인).{0,35}(?:확인했|확인해봤|확인해봐|확인해보고|확인하려고|확인만\s*(?:했|하고)|입력해봤|결제\s*끝냈|끝냈|설정|나왔|싶어|봤어)` +
+    String.raw`|(?:내가|직접|맞는지|어디|뒀는지|잘\s*있는지|있는지|기억나는지|나오는지|되는지|변경하려고|확인하려고|확인하고|확인만|본인\s*확인|본인확인).{0,45}${CREDENTIAL_REQUEST_TARGET}.{0,35}(?:확인했|확인해봤|확인해봐|확인해보고|확인하려고|확인만\s*(?:했|하고)|입력해봤|결제\s*끝냈|끝냈|설정|나왔|싶어|봤어)` +
   String.raw`)`,
   'i',
 );
