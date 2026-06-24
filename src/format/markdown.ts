@@ -55,6 +55,38 @@ const RISK_HEADLINE: Record<RiskLevel, string> = {
   '매우 높음': '🔴 위험도: 매우 높음',
 };
 
+const EMERGENCY_STOP: Record<RiskLevel, string[]> = {
+  낮음: [
+    '현재 입력만으로는 즉시 멈춤이 필요한 강한 위험 신호는 적습니다.',
+    '그래도 링크 클릭, 앱 설치, 송금, 인증번호 공유 요청이 나오면 즉시 중단하고 공식 경로로 확인하세요.',
+  ],
+  주의: [
+    '지금은 잠시 멈추고 확인해야 합니다.',
+    '링크 클릭, 앱 설치, 송금, 인증번호 공유를 하기 전에 공식 경로로 다시 확인하세요.',
+  ],
+  높음: [
+    '지금은 멈춰야 합니다.',
+    '링크 클릭, 앱 설치, 송금, 인증번호 공유를 하지 마세요.',
+  ],
+  '매우 높음': [
+    '지금은 즉시 멈춰야 합니다.',
+    '링크 클릭, 앱 설치, 송금, 인증번호 공유를 하지 마세요.',
+  ],
+};
+
+const SIGNAL_EXPLANATIONS: Record<SignalId, string> = {
+  impersonation: '기관·가족·지인처럼 보이게 만들어 신뢰나 권위로 압박하는 신호입니다.',
+  requestedAction: '인증번호, 원격제어, 상품권 코드처럼 피해로 이어질 수 있는 행동을 요구하는 신호입니다.',
+  urgency: '즉시 처리하라는 표현으로 사용자의 판단 시간을 줄이는 압박 신호입니다.',
+  financialLoss: '송금, 이체, 상품권 구매처럼 금전 피해로 이어질 수 있는 요구 신호입니다.',
+  personalInfo: '계좌번호, 비밀번호, 신분증 등 민감정보 탈취로 이어질 수 있는 신호입니다.',
+  malwareApp: '악성앱이나 원격제어 앱 설치로 단말 통제권을 빼앗을 수 있는 신호입니다.',
+  suspiciousLink: '외부 링크나 비공식 URL로 이동시켜 개인정보 입력 또는 악성앱 설치를 유도할 수 있는 신호입니다.',
+};
+
+const FAMILY_SHARE_GUIDE =
+  '검찰·경찰·금감원·은행은 전화나 메시지로 앱 설치, 인증번호, 송금을 요구하지 않습니다. 수상한 연락을 받으면 먼저 멈추고 가족 또는 공식 번호로 확인하세요.';
+
 /** 신고 채널 목록을 우선순위 순 마크다운으로 렌더(analyze/getReportChannels 공용). */
 export function renderChannels(channels: readonly ReportChannel[]): string {
   return [...channels]
@@ -145,10 +177,24 @@ export interface RiskAnalysisView {
 /** analyzePhishingRisk 결과를 정제된 마크다운으로 포맷(24k 가드 포함). */
 export function formatRiskAnalysis(view: RiskAnalysisView): string {
   const lines: string[] = [];
-  lines.push(`## ${RISK_HEADLINE[view.level]}`);
+  lines.push('## 30초 안전 브레이크');
+  for (const item of EMERGENCY_STOP[view.level]) lines.push(`- ${item}`);
+
+  lines.push(`\n### ${RISK_HEADLINE[view.level]}`);
+
+  // 하지 말아야 할 행동을 위험도 직후에 배치해 피해 행동을 먼저 차단한다.
+  lines.push('\n### 지금 하지 말아야 할 행동');
+  for (const item of DONT_DO[view.situation]) lines.push(`- ${item}`);
+
+  // 지금 해야 할 행동
+  lines.push('\n### 지금 해야 할 행동');
+  for (const item of DO_NOW[view.situation]) lines.push(`- ${item}`);
+  if (view.channel) {
+    for (const item of CHANNEL_DO_NOW[view.channel]) lines.push(`- ${item}`);
+  }
 
   // 판단 근거 = 탐지된 위험 신호
-  lines.push('\n### 판단 근거');
+  lines.push('\n### 왜 위험한가요?');
   if (view.signals.length === 0) {
     lines.push('- 입력에서 뚜렷한 위험 신호를 찾지 못했습니다.');
   } else {
@@ -157,19 +203,13 @@ export function formatRiskAnalysis(view: RiskAnalysisView): string {
         .slice(0, 5)
         .map((m) => compactEvidence(s.id, m))
         .join(', ');
-      lines.push(`- **${s.label}**: ${evidence}`);
+      lines.push(`- **${s.label}**: ${SIGNAL_EXPLANATIONS[s.id]} 근거: ${evidence}`);
     }
   }
 
-  // 하지 말아야 할 행동
-  lines.push('\n### 하지 말아야 할 행동');
-  for (const item of DONT_DO[view.situation]) lines.push(`- ${item}`);
-
-  // 지금 해야 할 행동
-  lines.push('\n### 지금 해야 할 행동');
-  for (const item of DO_NOW[view.situation]) lines.push(`- ${item}`);
-  if (view.channel) {
-    for (const item of CHANNEL_DO_NOW[view.channel]) lines.push(`- ${item}`);
+  if (view.level === '높음' || view.level === '매우 높음') {
+    lines.push('\n### 가족에게 공유할 문구');
+    lines.push(FAMILY_SHARE_GUIDE);
   }
 
   // 공식 신고 루트 요약

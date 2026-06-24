@@ -18,7 +18,7 @@ export const reportChannelsInputShape = {
   situation: z
     .enum(['suspiciousOnly', 'alreadyPaid', 'personalInfoExposed', 'malwareInstalled'])
     .describe(
-      '현재 상황: 의심만 받음(suspiciousOnly) / 이미 송금함(alreadyPaid) / 개인정보 노출(personalInfoExposed) / 악성앱 설치(malwareInstalled).',
+      '현재 상황: suspiciousOnly=의심만 받음(송금 전), alreadyPaid=이미 송금/이체함, personalInfoExposed=개인정보/신분증 노출, malwareInstalled=악성앱 설치 의심',
     ),
 } as const;
 

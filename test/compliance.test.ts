@@ -62,3 +62,31 @@ test('inputSchema가 object 타입으로 노출된다', async () => {
     assert.equal(t.inputSchema?.type, 'object', `${t.name} inputSchema.type`);
   }
 });
+
+test('inputSchema 설명은 enum 값을 한글 의미와 함께 안내한다', async () => {
+  const tools = await listTools();
+  const analyze = tools.find((t) => t.name === 'analyzePhishingRisk');
+  const report = tools.find((t) => t.name === 'getReportChannels');
+  assert.ok(analyze, 'analyzePhishingRisk tool');
+  assert.ok(report, 'getReportChannels tool');
+
+  const analyzeSchema = analyze.inputSchema as {
+    properties?: {
+      context?: {
+        properties?: Record<string, { description?: string }>;
+      };
+    };
+  };
+  const reportSchema = report.inputSchema as {
+    properties?: Record<string, { description?: string }>;
+  };
+  const context = analyzeSchema.properties?.context?.properties ?? {};
+
+  assert.match(context.channel?.description ?? '', /phone=전화/);
+  assert.match(context.channel?.description ?? '', /kakao=카카오톡\/메신저/);
+  assert.match(context.relationship?.description ?? '', /family=가족/);
+  assert.match(context.relationship?.description ?? '', /coworker=직장동료/);
+  assert.match(context.senderKnown?.description ?? '', /상대가 주장한 신원만으로는 true로 보지 마세요/);
+  assert.match(reportSchema.properties?.situation?.description ?? '', /suspiciousOnly=의심만 받음/);
+  assert.match(reportSchema.properties?.situation?.description ?? '', /malwareInstalled=악성앱 설치 의심/);
+});

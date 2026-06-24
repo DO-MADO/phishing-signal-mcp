@@ -33,18 +33,29 @@ export const analyzeInputShape = {
     .describe('의심스러운 통화/문자/메신저 내용 원문 (필수). Suspicious call/SMS/messenger text to analyze.'),
   context: z
     .object({
-      channel: z.enum(['phone', 'sms', 'kakao', 'unknown']).optional().describe('수신 채널'),
-      senderKnown: z.boolean().optional().describe('보낸 사람이 기존 연락처/지인으로 확인됐는지'),
+      channel: z
+        .enum(['phone', 'sms', 'kakao', 'unknown'])
+        .optional()
+        .describe('수신 채널: phone=전화, sms=문자, kakao=카카오톡/메신저, unknown=알 수 없음'),
+      senderKnown: z
+        .boolean()
+        .optional()
+        .describe('보낸 사람이 기존 연락처/지인으로 확인됐는지. 상대가 주장한 신원만으로는 true로 보지 마세요.'),
       relationship: z
         .enum(['family', 'friend', 'coworker', 'merchant', 'unknown'])
         .optional()
-        .describe('보낸 사람과의 관계(계좌 요청 문맥 보정용)'),
-      alreadySentMoney: z.boolean().optional().describe('이미 송금/이체했는지'),
-      alreadyInstalledApp: z.boolean().optional().describe('상대가 안내한 앱을 설치했는지'),
-      alreadySharedPersonalInfo: z.boolean().optional().describe('개인정보를 알려줬는지'),
+        .describe(
+          '보낸 사람과의 관계: family=가족, friend=친구/지인, coworker=직장동료, merchant=판매자/거래상대, unknown=알 수 없음',
+        ),
+      alreadySentMoney: z.boolean().optional().describe('이미 송금/이체했는지. 송금 전이면 false 또는 생략'),
+      alreadyInstalledApp: z.boolean().optional().describe('상대가 안내한 앱을 이미 설치했는지'),
+      alreadySharedPersonalInfo: z
+        .boolean()
+        .optional()
+        .describe('주민번호, 신분증, 계좌, 비밀번호 등 개인정보를 이미 알려줬는지'),
     })
     .optional()
-    .describe('선택: 있으면 행동 가이드를 정밀화'),
+    .describe('선택 정보: 수신 채널, 확인된 관계, 이미 발생한 피해 여부가 있으면 행동 가이드를 정밀화합니다.'),
 } as const;
 
 export type AnalyzePhishingRiskInput = z.infer<z.ZodObject<typeof analyzeInputShape>>;

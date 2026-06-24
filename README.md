@@ -1,17 +1,30 @@
 # 피싱 신호등 (PhishingSignal) — MCP Server
 
-수상한 전화·문자·메신저 내용을 붙여넣으면 **보이스피싱 위험도를 근거와 함께** 설명하고,
-**지금 해야 할 행동**과 **공식 신고 루트**를 안내하는 MCP 서버입니다.
+수상한 전화·문자·메신저 내용을 붙여넣으면 **송금·앱설치·인증번호 공유 전에 먼저 멈추게 하고**,
+보이스피싱 위험도와 근거, **지금 해야 할 행동**과 **공식 신고 루트**를 안내하는 MCP 서버입니다.
 
 > 판정은 LLM 호출이 아니라 **결정적(deterministic) 규칙 엔진**으로 수행합니다(응답 100ms 목표·무과금·일관성).
 > 자세한 제품/규정/확정값은 [SPEC.md](SPEC.md)를 참고하세요.
+
+## 포지셔닝
+
+피싱 신호등은 단순 탐지기가 아니라, 수상한 연락을 받았을 때 피해 행동 직전에 사용자를 멈춰 세우는 **30초 안전 브레이크**를 목표로 합니다.
+
+응답은 다음 순서로 구성됩니다.
+
+1. 30초 안전 브레이크: 링크 클릭, 앱 설치, 송금, 인증번호 공유 중단 안내
+2. 위험도: 낮음/주의/높음/매우 높음
+3. 지금 하지 말아야 할 행동
+4. 지금 해야 할 행동
+5. 왜 위험한가요?: 탐지 신호를 심리 압박/위험 행동 관점으로 설명
+6. 공식 신고 루트
 
 ## 툴 (MVP 2종)
 
 | 이름 | 역할 |
 |---|---|
-| `analyzePhishingRisk` | 입력 텍스트 → 위험 신호 탐지 → 위험도(낮음/주의/높음/매우 높음) + 근거 + 행동 가이드 |
-| `getReportChannels` | 상황별(`suspiciousOnly`/`alreadyPaid`/`personalInfoExposed`/`malwareInstalled`) 공식 신고 루트 |
+| `analyzePhishingRisk` | 입력 텍스트 → 30초 안전 브레이크 → 위험도(낮음/주의/높음/매우 높음) + 근거 + 행동 가이드 |
+| `getReportChannels` | 상황별 공식 신고 루트 (`suspiciousOnly`=의심만 받음, `alreadyPaid`=이미 송금, `personalInfoExposed`=개인정보 노출, `malwareInstalled`=악성앱 설치 의심) |
 
 - 전송: **Streamable HTTP / Remote / Stateless(no session)**
 - 안전: 입력 미저장, 민감정보 마스킹, 의심 링크 디팽, 모든 분석 출력에 디스클레이머, 응답 24k 가드
@@ -88,8 +101,3 @@ curl http://127.0.0.1:3000/healthz
 1. 공개 Endpoint URL 확보 → 경로는 `https://<host>/mcp`.
 2. PlayMCP 개발자 콘솔에 임시 등록 → 도구함 추가 → AI채팅 테스트 → 심사 요청.
 3. 심사 통과 후 공개 상태를 "전체 공개"로 전환.
-
-## 레포 포함 기준
-
-- 포함: `src/`, `test/`, `README.md`, `SPEC.md`, `Dockerfile`, `package.json`, `package-lock.json`, `tsconfig.json`
-- 제외: 로컬 빌드 산출물(`dist/`), 설치 의존성(`node_modules/`), 로컬 에이전트 지침/QA 핸드오프 문서(`AGENTS.md`, `CLAUDE.md`, `docs/claudeCode*.md`)

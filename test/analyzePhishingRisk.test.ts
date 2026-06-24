@@ -8,6 +8,8 @@ test('전형적 피싱 텍스트는 매우 높음 + 디스클레이머 포함', 
   const md = analyzePhishingRisk({
     text: '서울중앙지검 수사관입니다. 지금 당장 안전계좌로 송금하고 인증번호를 알려주세요.',
   });
+  assert.ok(md.startsWith('## 30초 안전 브레이크'));
+  assert.match(md, /지금은 즉시 멈춰야 합니다/);
   assert.match(md, /매우 높음/);
   assert.ok(md.includes(DISCLAIMER), '디스클레이머가 포함되어야 함');
 });
@@ -35,8 +37,9 @@ test('판단 근거는 긴 원문 덩어리 대신 핵심 표현으로 요약한
   const md = analyzePhishingRisk({ text: '엄마 ㅠㅠ 나 민정이ㅠㅠ 돈 없어 돈 너무 급행 돈 보내줭' });
 
   assert.ok(!md.includes('돈 없어 돈 너무 급행 돈 보내줭'), '긴 원문 근거가 그대로 노출되면 안 됨');
-  assert.match(md, /긴급성 압박.*급행/);
-  assert.match(md, /금전 피해 가능성.*돈.*보내줭/);
+  assert.match(md, /왜 위험한가요\?/);
+  assert.match(md, /긴급성 압박.*판단 시간을 줄이는 압박 신호.*급행/);
+  assert.match(md, /금전 피해 가능성.*금전 피해로 이어질 수 있는 요구 신호.*돈.*보내줭/);
 });
 
 test('송금 완료 컨텍스트면 즉시 대응 채널(112·1394)을 안내한다', () => {
@@ -100,6 +103,15 @@ test('계좌 요청은 신뢰 관계 정산 context가 있을 때만 낮춘다',
     }),
     /위험도: (높음|매우 높음)/,
   );
+});
+
+test('가족 공유 문구는 높은 위험도에서만 짧게 제공한다', () => {
+  const high = analyzePhishingRisk({ text: '엄마 나 폰 고장났어 급해서 수리비 돈좀 보내줘' });
+  const low = analyzePhishingRisk({ text: '엄마 오늘 저녁 같이 먹자' });
+
+  assert.match(high, /가족에게 공유할 문구/);
+  assert.match(high, /먼저 멈추고 가족 또는 공식 번호로 확인하세요/);
+  assert.doesNotMatch(low, /가족에게 공유할 문구/);
 });
 
 test('응답은 24k 바이트 한도를 넘지 않는다', () => {

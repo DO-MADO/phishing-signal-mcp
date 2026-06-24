@@ -7,25 +7,23 @@
 
 ## 0. 한 줄 정의
 
-수상한 전화·문자·카톡 내용을 붙여넣으면, **보이스피싱 위험도를 근거와 함께** 설명하고
-**지금 해야 할 행동**과 **공식 신고 루트**를 안내하는 MCP 서버.
+수상한 전화·문자·카톡 내용을 붙여넣으면, 송금·앱설치·인증번호 공유 전에 사용자를 먼저 멈춰 세우고
+**보이스피싱 위험도**, **판단 근거**, **지금 해야 할 행동**, **공식 신고 루트**를 안내하는 MCP 서버.
 
 - 포지셔닝: "규칙 기반"이라고 부르지 않는다. **"근거 설명형 위험도 판별 / Explainable Risk Scoring"**.
+- 사용자 경험 포지셔닝: **"30초 안전 브레이크"** — 분석보다 먼저 피해 행동(송금·앱설치·인증번호 공유)을 멈추게 한다.
 - 판정은 LLM 호출이 아니라 **결정적(deterministic) 규칙 엔진**으로 한다.
   - 이유: ① 응답 100ms 충족 ② 무과금 ③ 일관성 ④ 탐지 신호가 그대로 "판단 근거"가 됨.
 - LLM(호스트, 카카오톡/Claude 등)은 자연어 이해를 맡고, 이 MCP는 판정·근거·행동을 반환한다.
 
 ---
 
-## 1. 공모전 / 배포 컨텍스트 (Agentic Player 10 · PlayMCP in KC)
+## 1. 배포 / 심사 컨텍스트 (PlayMCP in KC)
 
-- 예선 접수: **2026-06-15 ~ 2026-07-14** (이 기간에만 PlayMCP in KC 서버 발급 가능)
-- 배포 방식: **Git 소스 빌드** (또는 컨테이너 이미지). 본 프로젝트는 Git 소스 빌드 사용.
-- **★ 레포 루트(또는 지정 경로)에 `Dockerfile` 필수** — 없으면 빌드 불가.
-- 발급된 Endpoint URL → PlayMCP 개발자 콘솔에 "임시 등록" → 도구함 추가 → AI채팅 테스트 → "심사 요청".
-- 심사 통과 후 공개 상태를 **"전체 공개"**로 전환해야 공모전 접수 가능.
-- 계정당 MCP 서버 최대 2대.
-- 본선: 8/31~9/28 카카오톡 이용자 투표 → 최종 10팀 10/23 발표.
+- 배포 방식: **Git 소스 빌드**. 레포 루트에 `Dockerfile`을 유지한다.
+- 공개 Endpoint URL의 MCP 경로는 `https://<host>/mcp`를 기준으로 한다.
+- PlayMCP 개발자 콘솔에서 임시 등록 → 도구함 테스트 → 심사 요청 순서로 검증한다.
+- 서버는 Streamable HTTP / Remote / Stateless(no session) 구성을 유지한다.
 
 ---
 
@@ -34,7 +32,7 @@
 | 용도 | 값 | 비고 |
 |---|---|---|
 | GitHub 레포명 | `phishing-signal-mcp` | 케밥케이스, 영문, `-mcp` 접미사 |
-| PlayMCP 등록명(표시) | `피싱 신호등` | 본선 대중성 + 기능 명확 |
+| PlayMCP 등록명(표시) | `피싱 신호등` | 기능을 직관적으로 설명하는 표시명 |
 | 영문 식별자/MCP 식별자 | `PhishingSignal` / `phishing-signal` | 콘솔/코드용 |
 | MCP server name(영문) | `phishing-signal` | "kakao" 미포함, AI/Bot/Service 키워드 미사용 |
 
@@ -48,7 +46,7 @@
 - 언어: **TypeScript**
 - 런타임: **Node.js 22 LTS**
 - 패키지 매니저: **npm**
-- MCP SDK: **`@modelcontextprotocol/sdk`** (공식, MIT) — 설치는 사용자 승인 후
+- MCP SDK: **`@modelcontextprotocol/sdk`** (공식, MIT) — `package-lock.json` 기준으로 재현 설치
 - 전송: **Streamable HTTP**, **Remote(공개 URL)**, **Stateless(no session) 권장**
 - MCP 스펙 버전: 최소 `2025-03-26` ~ 최대 `2025-11-25` 충족
 - 사전 점검: **MCP Inspector**로 스펙 준수 확인
@@ -60,26 +58,28 @@
 > 번호 평판 조회 / URL 평판 / 음성 분석 / 신고 자동화는 **v2로 분리**(MVP 제외).
 
 ### 4.1 `analyzePhishingRisk`
-- 역할: 입력 텍스트에서 위험 신호 탐지 → 가중치 점수화 → 위험도 구간 + 근거 + 행동 가이드 반환.
+- 역할: 입력 텍스트에서 위험 신호 탐지 → 가중치 점수화 → 30초 안전 브레이크 + 위험도 구간 + 근거 + 행동 가이드 반환.
 - 입력 스키마:
   ```ts
   type AnalyzePhishingRiskInput = {
     text: string;                      // 필수: 의심 문자/통화/메시지 내용 붙여넣기
     context?: {                        // 선택: 있으면 행동 가이드 정밀화
-      channel?: 'phone' | 'sms' | 'kakao' | 'unknown';
-      senderKnown?: boolean;           // 선택: 기존 연락처/지인으로 확인된 상대인지
-      relationship?: 'family' | 'friend' | 'coworker' | 'merchant' | 'unknown';
-      alreadySentMoney?: boolean;
-      alreadyInstalledApp?: boolean;
-      alreadySharedPersonalInfo?: boolean;
+      channel?: 'phone' | 'sms' | 'kakao' | 'unknown'; // phone=전화, sms=문자, kakao=카카오톡/메신저, unknown=알 수 없음
+      senderKnown?: boolean;           // 기존 연락처/지인으로 확인된 상대인지. 상대 주장만으로 true 금지
+      relationship?: 'family' | 'friend' | 'coworker' | 'merchant' | 'unknown'; // 가족/친구·지인/직장동료/거래상대/알 수 없음
+      alreadySentMoney?: boolean;      // 이미 송금/이체했는지
+      alreadyInstalledApp?: boolean;   // 상대가 안내한 앱을 이미 설치했는지
+      alreadySharedPersonalInfo?: boolean; // 개인정보·신분증·계좌·비밀번호 등을 이미 알려줬는지
     };
   };
   ```
 - 출력(정제된 마크다운, 24k 미만):
+  - 30초 안전 브레이크: 링크 클릭 / 앱 설치 / 송금 / 인증번호 공유 중단 안내
   - 위험도: `낮음 | 주의 | 높음 | 매우 높음`
-  - 판단 근거: 탐지된 위험 신호 목록(= 근거)
-  - 하지 말아야 할 행동
+  - 지금 하지 말아야 할 행동
   - 지금 해야 할 행동
+  - 왜 위험한가요?: 탐지된 위험 신호를 심리 압박/위험 행동 관점으로 설명
+  - 가족에게 공유할 문구(높음/매우 높음일 때만 짧게)
   - (상황에 맞는) 공식 신고 루트 요약
   - 디스클레이머(아래 §7)
 
@@ -89,6 +89,7 @@
   ```ts
   type GetReportChannelsInput = {
     situation: 'suspiciousOnly' | 'alreadyPaid' | 'personalInfoExposed' | 'malwareInstalled';
+    // suspiciousOnly=의심만 받음, alreadyPaid=이미 송금/이체, personalInfoExposed=개인정보 노출, malwareInstalled=악성앱 설치 의심
   };
   ```
 - 출력: §6의 확정값 기반 마크다운.
@@ -220,16 +221,12 @@ phishing-signal-mcp/
    └─ fixtures/             # 캘리브레이션/adversarial 합성 샘플
 ```
 
-로컬 작업용 파일(`AGENTS.md`, `CLAUDE.md`, `docs/claudeCode*.md`)과 생성물(`dist/`, `node_modules/`)은 공개 제출 커밋에 포함하지 않는다.
-
----
-
 ## 10. 구현 / 검증 상태
 
 완료:
 1. `package.json` + `package-lock.json` + `tsconfig.json` + `Dockerfile` 구성.
 2. `engine` 구현: 민감정보 마스킹 → 위험 신호 탐지 → 정상 문맥 suppression → 점수/구간 산정.
-3. `analyzePhishingRisk`: 입력 스키마, context-aware 보정, annotations 5종, 마크다운 출력.
+3. `analyzePhishingRisk`: 입력 스키마, context-aware 보정, annotations 5종, 30초 안전 브레이크 중심 마크다운 출력.
 4. `getReportChannels`: §6 확정값 기반 상황별 공식 신고 채널 안내.
 5. `server.ts`: Streamable HTTP, Remote, stateless, `/mcp`, `/healthz`.
 6. 테스트: compliance/server/tool/engine/scenario/adversarial 회귀 테스트.
