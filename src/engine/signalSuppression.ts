@@ -248,7 +248,17 @@ const LIVE_CREDENTIAL_REQUEST = new RegExp(
   String.raw`(?:` +
     String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,35}${CREDENTIAL_DISCLOSURE_ACTION}\s*(?:${IMPERATIVE_ENDING})?` +
     String.raw`|${CREDENTIAL_DISCLOSURE_ACTION}\s*(?:${IMPERATIVE_ENDING})?.{0,35}${CREDENTIAL_REQUEST_TARGET}` +
-    String.raw`|${APP_PERMISSION_TERMS}.{0,35}(?:허용|켜|설치|진행|확인)\s*(?:${IMPERATIVE_ENDING})?` +
+    String.raw`|${APP_PERMISSION_TERMS}.{0,35}(?:허용(?!하지)|켜(?!져|진)|설치|진행)\s*(?:${IMPERATIVE_ENDING})?` +
+  String.raw`)` +
+  NOMINALIZER_GUARD,
+  'i',
+);
+
+const LIVE_CREDENTIAL_IMPERATIVE = new RegExp(
+  String.raw`(?:` +
+    String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,35}${CREDENTIAL_DISCLOSURE_ACTION}\s*${IMPERATIVE_ENDING}` +
+    String.raw`|${CREDENTIAL_DISCLOSURE_ACTION}\s*${IMPERATIVE_ENDING}.{0,35}${CREDENTIAL_REQUEST_TARGET}` +
+    String.raw`|${APP_PERMISSION_TERMS}.{0,35}(?:허용(?!하지)|켜(?!져|진)|설치|진행)\s*${IMPERATIVE_ENDING}` +
   String.raw`)` +
   NOMINALIZER_GUARD,
   'i',
@@ -258,14 +268,26 @@ const CREDENTIAL_SELF_HELP_CONTEXT = new RegExp(
   String.raw`(?:` +
     String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,45}(?:변경|재발급|초기화|찾는|찾기|까먹|분실).{0,25}(?:방법|문서|절차|설명|알려)` +
     String.raw`|(?:방법|문서|절차|설명|알려).{0,25}${CREDENTIAL_REQUEST_TARGET}.{0,45}(?:변경|재발급|초기화|찾는|찾기|까먹|분실)` +
-    String.raw`|${CREDENTIAL_REQUEST_TARGET}.{0,30}(?:입력해서|입력하고|입력한\s*뒤).{0,25}(?:가입|로그인|본인\s*로그인).{0,20}(?:완료|했|함)` +
-    String.raw`|${CREDENTIAL_REQUEST_TARGET}.{0,60}(?:절대|안\s*된|안\s*된다|하지\s*마|말라|알려주면\s*안|알려주지|공유하지|남에게|타인에게|누구에게도|가족에게도|요구하면|피싱일\s*수|배웠|교육|본인\s*휴대폰|회신\s*금지|금지\s*문구|문구|배너)` +
-    String.raw`|(?:절대|안\s*된|안\s*된다|하지\s*마|말라|알려주면\s*안|알려주지|공유하지|남에게|타인에게|누구에게도|가족에게도|요구하면|피싱일\s*수|배웠|교육|본인\s*휴대폰|회신\s*금지|금지\s*문구|문구|배너).{0,60}${CREDENTIAL_REQUEST_TARGET}` +
-    String.raw`|${APP_PERMISSION_TERMS}.{0,60}(?:필요한\s*앱에만|민감하니|허용하지|하지\s*말|말자|끄|해제|불필요|최소화|위험|교육)` +
-    String.raw`|(?:필요한\s*앱에만|민감하니|허용하지|하지\s*말|말자|끄|해제|불필요|최소화|위험|교육).{0,60}${APP_PERMISSION_TERMS}` +
+    String.raw`|${CREDENTIAL_REQUEST_TARGET}.{0,30}(?:입력해서|입력하고|입력한\s*뒤|받아서|받고|마치고).{0,35}(?:가입|로그인|본인\s*로그인|본인\s*확인|본인확인).{0,20}(?:완료|했|함|가입)` +
+    String.raw`|${CREDENTIAL_REQUEST_TARGET}.{0,70}(?:절대|안\s*된|안\s*된다|하지\s*마|말라|알려주면\s*안|알려주지|알려달라는|공유하지|남에게|타인에게|누구에게도|가족에게도|요구하면|피싱일\s*수|배웠|교육|본인\s*휴대폰|회신\s*금지|금지\s*문구|문구|배너|무시|삭제|차단|신고)` +
+    String.raw`|(?:절대|안\s*된|안\s*된다|하지\s*마|말라|알려주면\s*안|알려주지|알려달라는|공유하지|남에게|타인에게|누구에게도|가족에게도|요구하면|피싱일\s*수|배웠|교육|본인\s*휴대폰|회신\s*금지|금지\s*문구|문구|배너|무시|삭제|차단|신고).{0,70}${CREDENTIAL_REQUEST_TARGET}` +
+    String.raw`|${CREDENTIAL_REQUEST_TARGET}.{0,70}(?:입력\s*화면|확인하는\s*법|확인\s*방법).{0,35}(?:배웠|교육|문서|설명)` +
+    String.raw`|${APP_PERMISSION_TERMS}.{0,70}(?:필요한\s*앱에만|필요한\s*것만|민감하니|허용하지|하지\s*말|말자|끄|꺼져|켜져\s*있나|해제|불필요|필요\s*없|최소화|위험|교육)` +
+    String.raw`|(?:필요한\s*앱에만|필요한\s*것만|민감하니|허용하지|하지\s*말|말자|끄|꺼져|켜져\s*있나|해제|불필요|필요\s*없|최소화|위험|교육).{0,70}${APP_PERMISSION_TERMS}` +
   String.raw`)`,
   'i',
 );
+
+const CREDENTIAL_SELF_HELP_INFORMATION_REQUEST = new RegExp(
+  String.raw`${CREDENTIAL_REQUEST_TARGET}.{0,45}(?:변경|재발급|초기화|찾는|찾기|까먹|분실).{0,25}(?:방법|문서|절차|설명)\s*(?:알려|설명)\s*${IMPERATIVE_ENDING}`,
+  'i',
+);
+
+const CREDENTIAL_SELF_HELP_SIGNALS: ReadonlySet<SignalId> = new Set<SignalId>([
+  'requestedAction',
+  'malwareApp',
+  'personalInfo',
+]);
 
 // 부수적인 정상 조각이 같은 메시지의 실제 요청을 덮어 끄지 못하게 보호할 신호(행동 신호).
 const REQUEST_OVERRIDABLE_SIGNALS: ReadonlySet<SignalId> = new Set<SignalId>([
@@ -280,6 +302,16 @@ export function shouldSuppressSignal(signalId: SignalId, text: string): boolean 
   //    (직접 명령형이 함께 있으면 회피 시도이므로 억제하지 않고 아래 단계로 보낸다.)
   if (!LIVE_IMPERATIVE_BROAD.test(text) && META_DESCRIPTIVE_CONTEXT.test(text)) return true;
 
+  const credentialSelfHelp = CREDENTIAL_SELF_HELP_CONTEXT.test(text);
+  const liveCredentialImperative = LIVE_CREDENTIAL_IMPERATIVE.test(text);
+  if (
+    CREDENTIAL_SELF_HELP_SIGNALS.has(signalId) &&
+    credentialSelfHelp &&
+    (!liveCredentialImperative || CREDENTIAL_SELF_HELP_INFORMATION_REQUEST.test(text))
+  ) {
+    return true;
+  }
+
   // 2) 기존 bypass: 실제 공격 문맥을 복원한다.
   if ((SUPPRESSION_BYPASS_PATTERNS[signalId] ?? []).some((pattern) => pattern.test(text))) return false;
 
@@ -293,7 +325,6 @@ export function shouldSuppressSignal(signalId: SignalId, text: string): boolean 
   if (
     benign &&
     REQUEST_OVERRIDABLE_SIGNALS.has(signalId) &&
-    !CREDENTIAL_SELF_HELP_CONTEXT.test(text) &&
     (LIVE_RISK_REQUEST.test(text) || LIVE_CREDENTIAL_REQUEST.test(text))
   ) {
     return false;
