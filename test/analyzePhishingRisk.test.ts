@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzePhishingRisk } from '../src/tools/analyzePhishingRisk.js';
+import { analyzePhishingRisk, scoreText } from '../src/tools/analyzePhishingRisk.js';
 import { DISCLAIMER, MAX_RESPONSE_BYTES } from '../src/format/markdown.js';
 import { REPORT_CHANNELS } from '../src/data/reportChannels.js';
 
@@ -12,6 +12,15 @@ test('전형적 피싱 텍스트는 매우 높음 + 디스클레이머 포함', 
   assert.match(md, /지금은 즉시 멈춰야 합니다/);
   assert.match(md, /매우 높음/);
   assert.ok(md.includes(DISCLAIMER), '디스클레이머가 포함되어야 함');
+});
+
+test('리포트용 scoreText는 텍스트-only 점수 경로를 반환한다', () => {
+  const score = scoreText('서울중앙지검 수사관입니다. 지금 당장 안전계좌로 송금하고 인증번호를 알려주세요.');
+
+  assert.equal(score.level, '매우 높음');
+  assert.ok(score.signalIds.includes('impersonation'));
+  assert.ok(score.signalIds.includes('requestedAction'));
+  assert.ok(score.signalIds.includes('financialLoss'));
 });
 
 test('빈 입력은 안전한 기본 응답(낮음) + 디스클레이머', () => {

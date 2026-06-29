@@ -134,6 +134,19 @@ export function analyzePhishingRisk(input: AnalyzePhishingRiskInput): string {
   });
 }
 
+/** 텍스트만 붙여넣은 사용자 경로와 같은 점수 산출 결과를 반환한다(리포트/QA용). */
+export function scoreText(text: string): {
+  level: ReturnType<typeof scoreSignals>['level'];
+  total: number;
+  signalIds: DetectedSignal['id'][];
+} {
+  const raw = (text ?? '').slice(0, MAX_INPUT_CHARS);
+  const masked = maskSensitive(raw);
+  const signals = applyContextSignalAdjustments(detectSignals(masked), masked, undefined);
+  const score = scoreSignals(signals);
+  return { level: score.level, total: score.total, signalIds: score.signals.map((signal) => signal.id) };
+}
+
 /** MCP 서버에 analyzePhishingRisk 툴을 등록한다(배선은 server.ts에서 호출). */
 export function registerAnalyzePhishingRisk(server: McpServer): void {
   server.registerTool(
