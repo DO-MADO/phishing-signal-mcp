@@ -130,6 +130,9 @@
 - 임계값(구간 경계)은 **보수적으로** : 오탐(false positive)보다 **미탐(false negative) 회피 우선**
 - 초기 가중치/임계값은 v1에서 하드코딩 후, 실제 피싱 샘플로 캘리브레이션(후속)
 - 탐지는 정규식/키워드 사전 기반이되, **카테고리 단위로 구조화**하여 "단순 키워드 매칭"으로 보이지 않게 한다.
+- 탐지 직전 **정규화 패스**(`engine/normalize.ts`)로 은어·오타·띄어쓰기 파괴를 카테고리 표준어로 맞춰 우회·난독화 미탐을 줄인다. 원문·마스킹·출력 텍스트는 바꾸지 않고 매칭 사본에만 적용한다.
+- 대명사·지시어 우회 요구는 **맥락 + 지시어 + 전달동사 3요소 동시발생**일 때만 신호로 본다(과탐 억제).
+- 판정 품질은 회귀 불변식과 **회귀셋과 분리한 held-out 세트**로 측정·검증한다(§10).
 
 ---
 
@@ -203,13 +206,18 @@ phishing-signal-mcp/
 ├─ tsconfig.json
 ├─ README.md               # 공개 레포 소개/실행/점검 안내
 ├─ SPEC.md                 # 본 문서
+├─ docs/
+│  └─ QUALITY_REPORT.md    # 품질 리포트(npm run report 산출물)
+├─ scripts/
+│  └─ qaReport.ts          # 품질 지표(정밀도·재현율·held-out) 생성기
 ├─ src/
 │  ├─ server.ts            # MCP 서버 부트스트랩(Streamable HTTP, stateless)
 │  ├─ tools/
-│  │  ├─ analyzePhishingRisk.ts # 위험도 분석 MCP 툴
+│  │  ├─ analyzePhishingRisk.ts # 위험도 분석 MCP 툴(scoreText: QA용 점수 래퍼 포함)
 │  │  └─ getReportChannels.ts   # 상황별 공식 신고 루트 MCP 툴
 │  ├─ engine/
 │  │  ├─ mask.ts              # 민감정보 마스킹
+│  │  ├─ normalize.ts         # 탐지 전용 정규화(은어·오타·띄어쓰기 표준화)
 │  │  ├─ score.ts             # 가중치 합산 → 구간 매핑
 │  │  ├─ signalSuppression.ts # 정상 문맥 과탐 억제
 │  │  └─ signals.ts           # 위험 신호 7종 탐지기(정규식/사전)
@@ -217,7 +225,8 @@ phishing-signal-mcp/
 │  │  ├─ reportChannels.ts    # §6 공식 신고 채널 확정값
 │  │  ├─ scamPatternLexicon.ts # 공통 피싱 문법/문맥 lexicon
 │  │  ├─ scamScenarios.ts     # 공식/대표 시나리오 기반 탐지 데이터
-│  │  └─ sourceDiscovery.ts    # 출처 검증 메모/데이터
+│  │  ├─ sourceDiscovery.ts    # 출처 검증 메모/데이터
+│  │  └─ textNormalizationLexicon.ts # 탐지 정규화 사전(은어·오타→표준어)
 │  └─ format/
 │     └─ markdown.ts       # 출력 포맷터(24k 가드 포함)
 └─ test/
@@ -225,6 +234,7 @@ phishing-signal-mcp/
    ├─ compliance.test.ts
    ├─ format.test.ts                  # 마크다운 포맷/24k 가드 테스트
    ├─ getReportChannels.test.ts       # 신고 채널 툴 테스트
+   ├─ holdoutShape.test.ts            # held-out 세트 구조 검증(위험도 비단언)
    ├─ mask.test.ts                    # 민감정보 마스킹 테스트
    ├─ scamAdversarialQuality.test.ts  # adversarial 합성 샘플 품질/회귀 테스트
    ├─ scamCalibration.test.ts         # 캘리브레이션 샘플 구조/기대값 테스트
@@ -234,7 +244,9 @@ phishing-signal-mcp/
    ├─ signals.test.ts                 # 위험 신호 탐지 테스트
    └─ fixtures/
       ├─ scamAdversarialSamples.ts    # adversarial 공격/정상 합성 샘플
-      └─ scamCalibrationSamples.ts    # 캘리브레이션 합성 샘플
+      ├─ scamCalibrationSamples.ts    # 캘리브레이션 합성 샘플
+      ├─ holdoutSamples.ts            # held-out v1(개발 참고셋, 위험도 미단언)
+      └─ holdoutV2Samples.ts          # held-out v2(검증셋, 개선에 미사용)
 ```
 
 ## 10. 구현 / 검증 상태
@@ -246,6 +258,14 @@ phishing-signal-mcp/
 4. `getReportChannels` : §6 확정값 기반 상황별 공식 신고 채널 안내
 5. `server.ts` : Streamable HTTP, Remote, stateless, `/mcp`, `/healthz`
 6. 테스트 : compliance/server/tool/engine/scenario/adversarial 회귀 테스트
+7. 탐지 정규화(`engine/normalize.ts`) + 대명사·서술형 우회 요구/난독화 패턴 보강
+8. 품질 측정 : `scripts/qaReport.ts`(`npm run report`)로 회귀셋·held-out 정밀도/재현율/오탐/미탐 방향 산출 → `docs/QUALITY_REPORT.md`
+
+품질 기준선 (2026-06-29 측정, 외부 호출 없는 결정적 엔진) :
+- CI 강제 불변식(매 커밋 단언) : 정상 187건 과잉경고 0건, 공격 286건 전부 경고 임계값 이상, 신호 Recall 100%
+- held-out 일반화(회귀셋과 분리, 엔진이 튜닝에 쓰지 않은 신규 샘플, n=40) : 탐지율 86.4%(19/22), 정밀도 79.2%(19/24)
+- 보수적 방향성 : 회귀셋 미탐(under-call) 0건 — 모든 불일치가 더 위험하게 본 방향
+- 알려진 한계 : "사기를 언급하는 안전한 문장" 과경고와 신규 난독화 미탐이 남아 있음(샘플 보강으로 지속 개선)
 
 검증 순서 :
 1. `npm run typecheck`
@@ -258,5 +278,7 @@ phishing-signal-mcp/
 ## 11. 후속 고도화
 
 - 마스킹 정밀도 개선 : 정상 숫자와 민감정보를 더 안정적으로 구분하도록 샘플 기반으로 보완한다.
-- 위험도 캘리브레이션 : 실제 피싱·정상 샘플을 추가 확보해 임계값과 가중치를 지속적으로 튜닝한다.
+- 위험도 캘리브레이션 : held-out 측정 체계 구축 완료. 실제 피싱·정상 샘플을 추가 확보해 임계값과 가중치를 지속 튜닝한다.
+- 정밀도 개선 : "사기를 언급하는 안전한 문장" 과경고를 줄이도록 정상 문맥 suppression을 일반화한다(held-out 정밀도 기준으로 회귀 검증).
+- held-out 확장 : 표본을 늘려 일반화 추정의 신뢰구간을 좁힌다.
 - v2 후보 : 번호 평판 조회, URL 평판, 음성 분석, 신고 절차 보조(공식·무상 데이터 출처와 개인정보 처리 범위 검토 후)
