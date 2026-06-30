@@ -40,6 +40,27 @@
 <br>
 
 
+## 🖼️ UX 프리뷰
+
+> MCP 응답이 호스트 앱에서 어떻게 보일지 나타낸 디자인 프리뷰입니다(실제 서버는 정제된 Markdown을 반환). <br> **위험 결과는 위험도가 아니라 '멈춤 명령'으로 시작**하고, 정상(낮음)은 겁주지 않고 차분히 안내합니다. 위험도는 신호등 4색(🟢 낮음 · 🟡 주의 · 🟠 높음 · 🔴 매우 높음)으로 구분합니다.
+
+<table>
+  <tr>
+    <td align="center" width="25%"><img src="docs/ux/01-landing.png" width="200" alt="붙여넣기 화면"><br><b>① 붙여넣기</b><br><sub>그 대화에 붙여넣으면 즉시 마스킹</sub></td>
+    <td align="center" width="25%"><img src="docs/ux/02-context.png" width="200" alt="상황 선택 화면"><br><b>② 상황 선택</b><br><sub>신뢰 관계 확인 시에만 위험도 완화</sub></td>
+    <td align="center" width="25%"><img src="docs/ux/03-result-high.png" width="200" alt="위험 결과 화면"><br><b>③ 분석 결과 · 위험</b><br><sub>🔴 위험도보다 멈춤 명령 먼저</sub></td>
+    <td align="center" width="25%"><img src="docs/ux/03b-result-low.png" width="200" alt="정상 결과 화면"><br><b>③ 분석 결과 · 정상</b><br><sub>🟢 겁주지 않고 차분하게</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/ux/04-actions.png" width="200" alt="행동 가이드 화면"><br><b>④ 행동 가이드</b><br><sub>하지 마세요 / 하세요 분리</sub></td>
+    <td align="center"><img src="docs/ux/05-why.png" width="200" alt="왜 위험한가 화면"><br><b>⑤ 왜 위험한가요</b><br><sub>신호→심리압박 번역 + 가족 공유</sub></td>
+    <td align="center"><img src="docs/ux/06-report.png" width="200" alt="신고 채널 화면"><br><b>⑥ 신고 채널</b><br><sub>'이미 한 행동'에 따라 루트 분기</sub></td>
+    <td align="center"><img src="docs/ux/07-privacy.png" width="200" alt="안전 원칙 화면"><br><b>⑦ 안전 원칙</b><br><sub>미저장·마스킹·외부 호출 없음·결정적</sub></td>
+  </tr>
+</table>
+
+<br>
+
 ## 🛠️ 툴 (MVP 2종)
 
 | 이름 | 역할 |
@@ -94,6 +115,127 @@
 - **Held-out 세트**는 회귀 데이터와 분리해 엔진이 학습·튜닝에 쓰지 않은 신규 샘플이라, 순환논리 없는 일반화 추정입니다(표본 40개라 신뢰구간은 넓습니다).
 
 > **정직한 한계** : held-out 정밀도가 보여주듯 "사기를 *언급*하는 안전한 문장"을 과경고하는 사례가 남아 있고, 새로운 난독화·우회 표현은 미탐될 수 있습니다. 규칙 엔진의 구조적 한계이며 샘플 보강으로 지속 개선합니다.
+
+<br>
+
+## 🔀 동작 흐름
+
+`analyzePhishingRisk`의 내부 처리 흐름입니다. 마스킹 → **탐지용 정규화**(은어·오타·띄어쓰기 표준화, 매칭 사본에만) → 신호별 정상 문맥 억제 → 7종 패턴 매칭 → context 보정 → 점수화 → 정제 Markdown 순으로, 외부 호출 없이 **결정적**으로 동작합니다.
+
+```mermaid
+flowchart TD
+    A["tool call: analyzePhishingRisk"] --> B["입력 검증"]
+    B --> C["text 최대 20,000자 분석"]
+    C --> D["maskSensitive"]
+    D --> E["PII 숫자 마스킹"]
+    E --> F["detectSignals"]
+    F --> F2["탐지용 정규화: 은어·오타·띄어쓰기 → 표준어 (매칭 사본, 원문 불변)"]
+    F2 --> N["신호별 정상 문맥 억제 검사 (원문 기준)"]
+    N --> G["기관·가족/지인 사칭"]
+    N --> H["위험 행동 요구"]
+    N --> I["긴급성 압박"]
+    N --> J["금전 피해 가능성"]
+    N --> K["개인정보 탈취"]
+    N --> L["악성앱 설치 유도"]
+    N --> M["의심 링크/발신"]
+    G --> O["context 기반 신호 보정"]
+    H --> O
+    I --> O
+    J --> O
+    K --> O
+    L --> O
+    M --> O
+    O --> P{"신뢰 관계 정산성 계좌 요청?"}
+    P -->|"예, 고위험 신호 없음"| Q["계좌 단독 personalInfo 신호 제거"]
+    P -->|"아니오"| R["신호 유지"]
+    Q --> S["scoreSignals 가중치 합산"]
+    R --> S
+    S --> U{"총점"}
+    U -->|"0 이하"| V["낮음"]
+    U -->|"1-2"| W["주의"]
+    U -->|"3-5"| X["높음"]
+    U -->|"6 이상"| Y["매우 높음"]
+    V --> Z["formatRiskAnalysis → 정제 Markdown"]
+    W --> Z
+    X --> Z
+    Y --> Z
+```
+
+<details>
+<summary><b>전체 처리 흐름 더 보기</b> · 요청 라우팅 / 신고 상황 선택 / 출력 분기 / getReportChannels</summary>
+
+<br>
+
+**MCP 요청 라우팅 (stateless)**
+
+```mermaid
+flowchart TD
+    A["MCP Host 또는 Inspector"] --> B["HTTP 요청 수신"]
+    B --> C["CORS 헤더 설정"]
+    C --> D{"요청 경로와 메서드"}
+    D -->|"OPTIONS"| E["204 응답"]
+    D -->|"GET /healthz 또는 /"| F["헬스 체크 JSON"]
+    D -->|"POST /mcp"| G["JSON body 읽기"]
+    D -->|"GET·DELETE /mcp"| H["405 Method not allowed"]
+    D -->|"그 외"| I["404 Not found"]
+    G --> J{"본문 파싱 성공?"}
+    J -->|"아니오"| K["400 JSON-RPC parse error"]
+    J -->|"예"| L["새 McpServer 생성 → 툴 2종 등록"]
+    L --> O["StreamableHTTP transport (sessionId undefined)"]
+    O --> Q["stateless 요청 처리 → 응답"]
+    Q --> S["close 시 transport/server 정리"]
+```
+
+**context → 신고 상황(situation) 선택**
+
+```mermaid
+flowchart TD
+    A["context 입력"] --> B{"alreadySentMoney?"}
+    B -->|"true"| C["alreadyPaid → 112·금융회사·1332·1394"]
+    B -->|"false/없음"| D{"alreadySharedPersonalInfo?"}
+    D -->|"true"| E["personalInfoExposed → pd.fss.or.kr·msafer.or.kr"]
+    D -->|"false/없음"| F{"alreadyInstalledApp?"}
+    F -->|"true"| G["malwareInstalled → 초기화·인증수단 재발급"]
+    F -->|"false/없음"| H["suspiciousOnly → 1394·118"]
+```
+
+**출력 Markdown 분기**
+
+```mermaid
+flowchart TD
+    A["formatRiskAnalysis"] --> B{"위험도 낮음?"}
+    B -->|"예"| C["낮음 결과: 위험도 + 짧은 주의 + 민감정보 금지 + 디스클레이머"]
+    B -->|"아니오"| H["주의 이상 결과"]
+    H --> I["30초 안전 브레이크"]
+    I --> K["지금 하지 말 행동 / 할 행동 / 채널별 추가"]
+    K --> N["왜 위험한가요?"]
+    N --> O{"높음·매우 높음?"}
+    O -->|"예"| P["가족 공유 문구"]
+    O -->|"아니오"| R["공식 신고 루트"]
+    P --> R
+    C --> U["24k byte 출력 가드"]
+    R --> U
+```
+
+**getReportChannels 흐름**
+
+```mermaid
+flowchart TD
+    A["tool call: getReportChannels"] --> B["situation 입력 검증"]
+    B --> C{"situation"}
+    C -->|"suspiciousOnly"| D["1394, 118"]
+    C -->|"alreadyPaid"| E["즉시 대응 강조 → 112, 금융회사, 1332, 1394"]
+    C -->|"personalInfoExposed"| F["pd.fss.or.kr, msafer.or.kr"]
+    C -->|"malwareInstalled"| G["초기화, 인증수단 폐기·재발급"]
+    D --> L["우선순위 순 Markdown → 디스클레이머 → 24k 가드"]
+    E --> L
+    F --> L
+    G --> L
+```
+
+</details>
+
+> 한 페이지 시각본: [PhishingSignal Flowchart (PDF)](docs/PhishingSignal-Flowchart.pdf)
 
 <br>
 
