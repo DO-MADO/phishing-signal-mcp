@@ -1,0 +1,22 @@
+name: CI
+
+# 매 push·PR마다 회귀 불변식(정상 과잉경고 0건, 공격 경고 임계값 이상, 신호 Recall 100%)을
+# npm test로 강제한다. 외부 호출 없는 결정적 엔진이라 러너에서 그대로 재현된다.
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm run report

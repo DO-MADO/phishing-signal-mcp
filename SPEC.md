@@ -274,6 +274,8 @@ phishing-signal-mcp/
 3. `npm run build`
 4. 서버 기동 후 MCP Inspector에서 `http://127.0.0.1:3000/mcp` 연결 및 `tools/list`, `tools/call` 확인
 
+> CI(`.github/workflows/ci.yml`)가 push·PR마다 위 1–3을 자동 실행해 회귀 불변식을 강제한다.
+
 ---
 
 ## 11. 후속 고도화
