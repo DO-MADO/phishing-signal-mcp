@@ -23,7 +23,7 @@
 
 ---
 
-## 1. 배포 / 심사 컨텍스트 (PlayMCP in KC)
+## 1. 배포 / 심사 컨텍스트
 
 - 배포 방식 : **Git 소스 빌드**. 레포 루트에 `Dockerfile`을 유지한다.
 - 공개 Endpoint URL의 MCP 경로는 `https://<host>/mcp`를 기준으로 한다.
