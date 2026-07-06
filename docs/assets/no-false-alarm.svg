@@ -15,6 +15,7 @@
   <rect x="1" y="1" width="878" height="248" rx="18" fill="url(#bg3)" stroke="#2c3654" stroke-width="2"/>
 
   <g font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+    <g transform="translate(0 -14)">
 
     <!-- ── 왼쪽: 평범한 문자 ── -->
     <text x="40" y="46" font-size="13" fill="#8b98b8">📩 쇼핑몰에서 온 문자</text>
@@ -77,7 +78,7 @@
     </circle>
 
     <!-- ── 오른쪽: 차분한 결과 ── -->
-    <text x="500" y="82" font-size="30" font-weight="700" fill="#f4f7ff">겁주지 않습니다</text>
+    <text x="500" y="82" font-size="30" font-weight="700" fill="#f4f7ff">뚜렷한 신호만 봅니다</text>
     <text x="500" y="106" font-size="14" fill="#8b98b8">위험할 때만 단호하게 — 정상 문자는 차분하게</text>
 
     <g opacity="0">
@@ -94,6 +95,7 @@
         values="0;0;1;1;0" keyTimes="0;0.53;0.57;0.94;1"/>
       <text x="500" y="192">"현재 입력에서는 송금·앱 설치·인증번호 요구·의심 링크 같은</text>
       <text x="500" y="212">뚜렷한 위험 신호가 확인되지 않았습니다." — 실제 응답 중에서</text>
+    </g>
     </g>
 
     <!-- 하단 캡션 (고정) -->
