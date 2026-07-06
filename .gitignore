@@ -6,6 +6,7 @@ dist/
 
 # Local agent
 .code-review-graph/
+.claude/
 
 # Internal strategy docs (not for public repo)
 docs/plan/

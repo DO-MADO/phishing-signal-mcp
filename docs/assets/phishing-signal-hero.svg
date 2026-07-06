@@ -1,0 +1,108 @@
+<svg viewBox="0 0 880 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="피싱 신호등 데모: 사기 문자가 도착하면 위험 신호를 스캔해 빨간불과 함께 '지금 멈추세요'를 안내하는 애니메이션">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10162a"/>
+      <stop offset="1" stop-color="#151c33"/>
+    </linearGradient>
+    <linearGradient id="scan" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4da3ff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#4da3ff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#4da3ff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 카드 배경 -->
+  <rect x="1" y="1" width="878" height="248" rx="18" fill="url(#bg)" stroke="#2c3654" stroke-width="2"/>
+
+  <!-- ── 왼쪽: 도착한 의심 문자 ── -->
+  <g font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+    <text x="40" y="46" font-size="13" fill="#8b98b8">📩 모르는 번호 · 방금 도착</text>
+    <rect x="36" y="58" width="308" height="140" rx="14" fill="#222b44" stroke="#33405f"/>
+
+    <g font-size="15" fill="#dbe2f0">
+      <text x="54" y="92">[Web발신] 서울중앙지검입니다
+        <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+          values="0;0;1;1;0" keyTimes="0;0.03;0.07;0.95;1"/>
+      </text>
+      <text x="54" y="122">계좌가 범죄에 연루되어
+        <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+          values="0;0;1;1;0" keyTimes="0;0.09;0.13;0.95;1"/>
+      </text>
+      <text x="54" y="152">지금 즉시 안전계좌로 송금하고
+        <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+          values="0;0;1;1;0" keyTimes="0;0.15;0.19;0.95;1"/>
+      </text>
+      <text x="54" y="182">인증번호를 알려주십시오
+        <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+          values="0;0;1;1;0" keyTimes="0;0.21;0.25;0.95;1"/>
+      </text>
+    </g>
+
+    <!-- 스캔 라인 -->
+    <rect x="38" y="60" width="304" height="26" rx="8" fill="url(#scan)" opacity="0">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0;0;0.9;0.9;0;0" keyTimes="0;0.27;0.29;0.4;0.44;1"/>
+      <animate attributeName="y" dur="8s" repeatCount="indefinite"
+        values="60;60;170;60" keyTimes="0;0.27;0.42;1"/>
+    </rect>
+    <text x="40" y="222" font-size="13" fill="#4da3ff" opacity="0">위험 신호 7종 스캔 중…
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0;0;1;1;0;0" keyTimes="0;0.27;0.29;0.42;0.46;1"/>
+    </text>
+    <text x="40" y="222" font-size="12.5" fill="#ff6b7a" opacity="0">사칭 · 긴급성 압박 · 금전 피해 · 개인정보 탈취 등 6종 감지
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0;0;1;1;0" keyTimes="0;0.47;0.5;0.94;1"/>
+    </text>
+  </g>
+
+  <!-- ── 가운데: 신호등 ── -->
+  <g>
+    <rect x="392" y="40" width="66" height="180" rx="16" fill="#1b2238" stroke="#33405f" stroke-width="2"/>
+    <!-- 초록 -->
+    <circle cx="425" cy="72" r="15" fill="#37d67a" opacity="0.16">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0.16;0.16;1;0.16;0.16" keyTimes="0;0.28;0.31;0.34;1"/>
+    </circle>
+    <!-- 노랑 -->
+    <circle cx="425" cy="114" r="15" fill="#ffd43b" opacity="0.16">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0.16;0.16;1;0.16;0.16" keyTimes="0;0.33;0.36;0.39;1"/>
+    </circle>
+    <!-- 주황 -->
+    <circle cx="425" cy="156" r="15" fill="#ff9838" opacity="0.16">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0.16;0.16;1;0.16;0.16" keyTimes="0;0.38;0.41;0.44;1"/>
+    </circle>
+    <!-- 빨강: 점등 후 맥동 -->
+    <circle cx="425" cy="198" r="24" fill="#ff4d5e" opacity="0">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0;0;0.35;0.12;0.35;0.12;0.35;0.35;0" keyTimes="0;0.46;0.5;0.58;0.66;0.74;0.82;0.94;1"/>
+    </circle>
+    <circle cx="425" cy="198" r="15" fill="#ff4d5e" opacity="0.16">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0.16;0.16;1;0.75;1;0.75;1;1;0.16" keyTimes="0;0.46;0.5;0.58;0.66;0.74;0.82;0.94;1"/>
+    </circle>
+  </g>
+
+  <!-- ── 오른쪽: 판정 결과 ── -->
+  <g font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+    <text x="500" y="82" font-size="30" font-weight="700" fill="#f4f7ff">🚦 피싱 신호등</text>
+    <text x="500" y="106" font-size="14" fill="#8b98b8">PhishingSignal — 붙여넣으면 끝, 30초 안전 브레이크</text>
+
+    <g opacity="0">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0;0;1;1;0" keyTimes="0;0.5;0.54;0.94;1"/>
+      <animateTransform attributeName="transform" type="translate" dur="8s" repeatCount="indefinite"
+        values="0 10;0 10;0 0;0 0;0 10" keyTimes="0;0.5;0.54;0.94;1"/>
+      <rect x="500" y="126" width="238" height="40" rx="20" fill="#3a1220" stroke="#ff4d5e" stroke-width="1.5"/>
+      <text x="519" y="152" font-size="17" font-weight="700" fill="#ff6b7a">🔴 위험도: 매우 높음</text>
+    </g>
+
+    <g opacity="0">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0;0;1;1;0" keyTimes="0;0.57;0.61;0.94;1"/>
+      <text x="500" y="196" font-size="18" font-weight="700" fill="#f4f7ff">지금 멈추세요 — 송금 · 앱설치 · 인증번호 공유 중단</text>
+      <text x="500" y="222" font-size="14" fill="#8b98b8">위험 근거 → 행동 가이드 → 공식 신고 루트까지 한 번에</text>
+    </g>
+  </g>
+</svg>

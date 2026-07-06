@@ -1,0 +1,85 @@
+<svg viewBox="0 0 880 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="가족 보호 루프 데모: 매우 높음 판정 시 생성된 가족 공유 문구를 복사해 부모님 채팅방에 보내면, 부모님이 사기 전화를 끊는 애니메이션">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10162a"/>
+      <stop offset="1" stop-color="#151c33"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 카드 배경 -->
+  <rect x="1" y="1" width="878" height="248" rx="18" fill="url(#bg2)" stroke="#2c3654" stroke-width="2"/>
+
+  <g font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+
+    <!-- ── 왼쪽: 자녀 화면(분석 결과) ── -->
+    <text x="34" y="30" font-size="13" fill="#8b98b8">🚦 자녀 화면 — 부모님이 받은 문자를 붙여넣어 분석</text>
+    <rect x="30" y="40" width="350" height="178" rx="14" fill="#1b2238" stroke="#33405f"/>
+
+    <g opacity="0">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0;0;1;1;0" keyTimes="0;0.03;0.07;0.95;1"/>
+      <rect x="48" y="56" width="158" height="30" rx="15" fill="#3a1220" stroke="#ff4d5e" stroke-width="1.2"/>
+      <text x="63" y="76" font-size="14" font-weight="700" fill="#ff6b7a">🔴 매우 높음</text>
+    </g>
+
+    <g opacity="0">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0;0;1;1;0" keyTimes="0;0.09;0.14;0.95;1"/>
+      <text x="48" y="112" font-size="15" font-weight="700" fill="#f4f7ff">📩 가족에게 공유할 문구</text>
+      <g font-size="13" fill="#c7d0e8">
+        <text x="48" y="138">검찰·경찰·금감원·은행은 전화나 메시지로</text>
+        <text x="48" y="158">앱 설치, 인증번호, 송금을 요구하지 않습니다.</text>
+        <text x="48" y="178">수상한 연락을 받으면 먼저 멈추고</text>
+        <text x="48" y="198">가족 또는 공식 번호로 확인하세요.</text>
+      </g>
+    </g>
+
+    <!-- ── 가운데: 전송 ── -->
+    <line x1="390" y1="118" x2="492" y2="118" stroke="#4da3ff" stroke-width="1.5" stroke-dasharray="5 5" opacity="0">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0;0;0.7;0.7;0;0" keyTimes="0;0.24;0.27;0.42;0.46;1"/>
+    </line>
+    <text x="384" y="125" font-size="19" opacity="0">✉️
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0;0;1;1;0;0" keyTimes="0;0.26;0.28;0.4;0.43;1"/>
+      <animateTransform attributeName="transform" type="translate" dur="8s" repeatCount="indefinite"
+        values="0 0;0 0;84 0;84 0" keyTimes="0;0.27;0.4;1"/>
+    </text>
+    <text x="441" y="148" font-size="11.5" fill="#8b98b8" text-anchor="middle" opacity="0">복사 → 전송
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0;0;1;1;0;0" keyTimes="0;0.26;0.29;0.42;0.46;1"/>
+    </text>
+
+    <!-- ── 오른쪽: 부모님 채팅방 ── -->
+    <text x="504" y="30" font-size="13" fill="#8b98b8">👵 부모님 채팅방</text>
+    <rect x="500" y="40" width="350" height="178" rx="14" fill="#1b2238" stroke="#33405f"/>
+
+    <!-- 자녀가 보낸 공유 문구 -->
+    <g opacity="0">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0;0;1;1;0" keyTimes="0;0.42;0.46;0.95;1"/>
+      <animateTransform attributeName="transform" type="translate" dur="8s" repeatCount="indefinite"
+        values="0 8;0 8;0 0;0 0;0 8" keyTimes="0;0.42;0.46;0.95;1"/>
+      <rect x="518" y="54" width="314" height="98" rx="12" fill="#2a3350"/>
+      <g font-size="12" fill="#dbe2f0">
+        <text x="534" y="76">검찰·경찰·금감원·은행은 전화나 메시지로</text>
+        <text x="534" y="96">앱 설치, 인증번호, 송금을 요구하지 않습니다.</text>
+        <text x="534" y="116">수상한 연락을 받으면 먼저 멈추고</text>
+        <text x="534" y="136">가족 또는 공식 번호로 확인하세요.</text>
+      </g>
+    </g>
+
+    <!-- 부모님 답장 -->
+    <g opacity="0">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
+        values="0;0;1;1;0" keyTimes="0;0.58;0.63;0.95;1"/>
+      <animateTransform attributeName="transform" type="translate" dur="8s" repeatCount="indefinite"
+        values="0 8;0 8;0 0;0 0;0 8" keyTimes="0;0.58;0.63;0.95;1"/>
+      <rect x="588" y="166" width="244" height="34" rx="12" fill="#1f3d31" stroke="#37d67a" stroke-width="1"/>
+      <text x="604" y="188" font-size="13" fill="#a9e8c6">큰일 날 뻔했네, 송금 안 했어 👍</text>
+    </g>
+
+    <!-- 하단 캡션 (고정) -->
+    <text x="440" y="240" font-size="13" fill="#8b98b8" text-anchor="middle">🟠 높음 · 🔴 매우 높음 판정 시 가족 공유 문구가 응답에 자동 포함됩니다 — 탐지에서 가족 보호까지</text>
+  </g>
+</svg>
