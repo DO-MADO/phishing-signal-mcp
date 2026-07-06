@@ -47,7 +47,7 @@
       <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
         values="0;0;1;1;0" keyTimes="0;0.44;0.48;0.94;1"/>
     </text>
-    <text x="40" y="222" font-size="12.5" fill="#8b98b8" opacity="0">과한 경고 없이, 한두 줄로 차분하게 안내합니다
+    <text x="40" y="222" font-size="12.5" fill="#8b98b8" opacity="0">과한 경고 없이, 한두 줄로 차분하게 안내합니다.
       <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
         values="0;0;1;1;0" keyTimes="0;0.5;0.54;0.94;1"/>
     </text>
@@ -78,7 +78,7 @@
     </circle>
 
     <!-- ── 오른쪽: 차분한 결과 ── -->
-    <text x="500" y="82" font-size="30" font-weight="700" fill="#f4f7ff">뚜렷한 신호만 봅니다</text>
+    <text x="500" y="82" font-size="30" font-weight="700" fill="#f4f7ff">뚜렷한 신호만 봅니다.</text>
     <text x="500" y="106" font-size="14" fill="#8b98b8">위험할 때만 단호하게 — 정상 문자는 차분하게</text>
 
     <g opacity="0">

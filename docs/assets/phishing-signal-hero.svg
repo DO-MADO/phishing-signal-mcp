@@ -87,7 +87,7 @@
   <!-- ── 오른쪽: 판정 결과 ── -->
   <g font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
     <text x="500" y="74" font-size="30" font-weight="700" fill="#f4f7ff">🚦 피싱 신호등</text>
-    <text x="500" y="103" font-size="14" fill="#8b98b8">PhishingSignal — 붙여넣으면 끝, 30초 안전 브레이크</text>
+    <text x="508" y="103" font-size="14" fill="#8b98b8">PhishingSignal — 붙여넣으면 끝, 30초 안전 브레이크</text>
 
     <g opacity="0">
       <animate attributeName="opacity" dur="8s" repeatCount="indefinite"
